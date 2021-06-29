@@ -1,0 +1,18 @@
+# Copyright (c) 2021, Oracle and/or its affiliates.
+# Licensed under the Universal Permissive License v1.0 as shown at https://oss.oracle.com/licenses/upl.
+---
+name: Login to OCIR
+description: GitHub Action to login to Oracle Cloud Infrastructure Registry
+inputs:
+  auth_token:
+    description: Auth token for the OCI user running the action
+    required: true
+outputs:
+  ocir_endpoint:
+    description: The OCIR endpoint to which the user has been authenticated
+  ocir_username:
+    description: The full username required by OCIR for login purposes
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+  post: 'dist/index.js'
