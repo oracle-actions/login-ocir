@@ -48,15 +48,21 @@ const common = __nccwpck_require__(5049);
 function login() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-        const cp = new common.ConfigFileAuthenticationDetailsProvider(process.env.OCI_CLI_CONFIG_FILE);
-        const ac = new artifacts.ArtifactsClient({ authenticationDetailsProvider: cp });
-        const ic = new identity.IdentityClient({ authenticationDetailsProvider: cp });
+        // Required environment variables
+        const tenancy = process.env.OCI_CLI_TENANCY || '';
+        const user = process.env.OCI_CLI_USER || '';
+        const fingerprint = process.env.OCI_CLI_FINGERPRINT || '';
+        const privateKey = process.env.OCI_CLI_KEY_CONTENT || '';
+        const region = common.Region.fromRegionId(process.env.OCI_CLI_REGION || '');
+        const authProvider = new common.SimpleAuthenticationDetailsProvider(tenancy, user, fingerprint, privateKey, null, region);
+        const ac = new artifacts.ArtifactsClient({ authenticationDetailsProvider: authProvider });
+        const ic = new identity.IdentityClient({ authenticationDetailsProvider: authProvider });
         const regionCode = (_b = (_a = (yield ic.listRegions({})).items
-            .find(x => x.name === cp.getRegion().regionId)) === null || _a === void 0 ? void 0 : _a.key) === null || _b === void 0 ? void 0 : _b.toLocaleLowerCase();
+            .find(x => x.name === authProvider.getRegion().regionId)) === null || _a === void 0 ? void 0 : _a.key) === null || _b === void 0 ? void 0 : _b.toLocaleLowerCase();
         if (regionCode) {
             const ocir = `${regionCode}.ocir.io`;
-            const namespace = (yield ac.getContainerConfiguration({ compartmentId: cp.getTenantId() })).containerConfiguration.namespace;
-            const ociUser = (yield ic.getUser({ userId: cp.getUser() })).user.name;
+            const namespace = (yield ac.getContainerConfiguration({ compartmentId: authProvider.getTenantId() })).containerConfiguration.namespace;
+            const ociUser = (yield ic.getUser({ userId: authProvider.getUser() })).user.name;
             const ociToken = core.getInput('auth_token', { required: true });
             const authToken = Buffer.from(`${namespace}/${ociUser}:${ociToken}`).toString('base64');
             const dockerConfigPath = path.join(os.homedir(), '.docker', 'config.json');
@@ -123,14 +129,27 @@ else {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.issue = exports.issueCommand = void 0;
 const os = __importStar(__nccwpck_require__(2087));
 const utils_1 = __nccwpck_require__(5278);
 /**
@@ -209,6 +228,25 @@ function escapeProperty(s) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -218,19 +256,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
 const command_1 = __nccwpck_require__(7351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(5278);
 const os = __importStar(__nccwpck_require__(2087));
 const path = __importStar(__nccwpck_require__(5622));
+const oidc_utils_1 = __nccwpck_require__(8041);
 /**
  * The code to exit an action
  */
@@ -292,7 +325,9 @@ function addPath(inputPath) {
 }
 exports.addPath = addPath;
 /**
- * Gets the value of an input.  The value is also trimmed.
+ * Gets the value of an input.
+ * Unless trimWhitespace is set to false in InputOptions, the value is also trimmed.
+ * Returns an empty string if the value is not defined.
  *
  * @param     name     name of the input to get
  * @param     options  optional. See InputOptions.
@@ -303,9 +338,49 @@ function getInput(name, options) {
     if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
     }
+    if (options && options.trimWhitespace === false) {
+        return val;
+    }
     return val.trim();
 }
 exports.getInput = getInput;
+/**
+ * Gets the values of an multiline input.  Each value is also trimmed.
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   string[]
+ *
+ */
+function getMultilineInput(name, options) {
+    const inputs = getInput(name, options)
+        .split('\n')
+        .filter(x => x !== '');
+    return inputs;
+}
+exports.getMultilineInput = getMultilineInput;
+/**
+ * Gets the input value of the boolean type in the YAML 1.2 "core schema" specification.
+ * Support boolean input list: `true | True | TRUE | false | False | FALSE` .
+ * The return value is also in boolean type.
+ * ref: https://yaml.org/spec/1.2/spec.html#id2804923
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   boolean
+ */
+function getBooleanInput(name, options) {
+    const trueValue = ['true', 'True', 'TRUE'];
+    const falseValue = ['false', 'False', 'FALSE'];
+    const val = getInput(name, options);
+    if (trueValue.includes(val))
+        return true;
+    if (falseValue.includes(val))
+        return false;
+    throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}\n` +
+        `Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
+}
+exports.getBooleanInput = getBooleanInput;
 /**
  * Sets the value of an output.
  *
@@ -361,19 +436,30 @@ exports.debug = debug;
 /**
  * Adds an error issue
  * @param message error issue message. Errors will be converted to string via toString()
+ * @param properties optional properties to add to the annotation.
  */
-function error(message) {
-    command_1.issue('error', message instanceof Error ? message.toString() : message);
+function error(message, properties = {}) {
+    command_1.issueCommand('error', utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 exports.error = error;
 /**
- * Adds an warning issue
+ * Adds a warning issue
  * @param message warning issue message. Errors will be converted to string via toString()
+ * @param properties optional properties to add to the annotation.
  */
-function warning(message) {
-    command_1.issue('warning', message instanceof Error ? message.toString() : message);
+function warning(message, properties = {}) {
+    command_1.issueCommand('warning', utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 exports.warning = warning;
+/**
+ * Adds a notice issue
+ * @param message notice issue message. Errors will be converted to string via toString()
+ * @param properties optional properties to add to the annotation.
+ */
+function notice(message, properties = {}) {
+    command_1.issueCommand('notice', utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
+exports.notice = notice;
 /**
  * Writes info to log with console.log.
  * @param message info message
@@ -446,6 +532,12 @@ function getState(name) {
     return process.env[`STATE_${name}`] || '';
 }
 exports.getState = getState;
+function getIDToken(aud) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield oidc_utils_1.OidcClient.getIDToken(aud);
+    });
+}
+exports.getIDToken = getIDToken;
 //# sourceMappingURL=core.js.map
 
 /***/ }),
@@ -456,14 +548,27 @@ exports.getState = getState;
 "use strict";
 
 // For internal use, subject to change.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const fs = __importStar(__nccwpck_require__(5747));
@@ -486,6 +591,90 @@ exports.issueCommand = issueCommand;
 
 /***/ }),
 
+/***/ 8041:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OidcClient = void 0;
+const http_client_1 = __nccwpck_require__(9925);
+const auth_1 = __nccwpck_require__(3702);
+const core_1 = __nccwpck_require__(2186);
+class OidcClient {
+    static createHttpClient(allowRetry = true, maxRetry = 10) {
+        const requestOptions = {
+            allowRetries: allowRetry,
+            maxRetries: maxRetry
+        };
+        return new http_client_1.HttpClient('actions/oidc-client', [new auth_1.BearerCredentialHandler(OidcClient.getRequestToken())], requestOptions);
+    }
+    static getRequestToken() {
+        const token = process.env['ACTIONS_ID_TOKEN_REQUEST_TOKEN'];
+        if (!token) {
+            throw new Error('Unable to get ACTIONS_ID_TOKEN_REQUEST_TOKEN env variable');
+        }
+        return token;
+    }
+    static getIDTokenUrl() {
+        const runtimeUrl = process.env['ACTIONS_ID_TOKEN_REQUEST_URL'];
+        if (!runtimeUrl) {
+            throw new Error('Unable to get ACTIONS_ID_TOKEN_REQUEST_URL env variable');
+        }
+        return runtimeUrl;
+    }
+    static getCall(id_token_url) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const httpclient = OidcClient.createHttpClient();
+            const res = yield httpclient
+                .getJson(id_token_url)
+                .catch(error => {
+                throw new Error(`Failed to get ID Token. \n 
+        Error Code : ${error.statusCode}\n 
+        Error Message: ${error.result.message}`);
+            });
+            const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
+            if (!id_token) {
+                throw new Error('Response json body do not have ID Token field');
+            }
+            return id_token;
+        });
+    }
+    static getIDToken(audience) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // New ID Token is requested from action service
+                let id_token_url = OidcClient.getIDTokenUrl();
+                if (audience) {
+                    const encodedAudience = encodeURIComponent(audience);
+                    id_token_url = `${id_token_url}&audience=${encodedAudience}`;
+                }
+                core_1.debug(`ID token url is ${id_token_url}`);
+                const id_token = yield OidcClient.getCall(id_token_url);
+                core_1.setSecret(id_token);
+                return id_token;
+            }
+            catch (error) {
+                throw new Error(`Error message: ${error.message}`);
+            }
+        });
+    }
+}
+exports.OidcClient = OidcClient;
+//# sourceMappingURL=oidc-utils.js.map
+
+/***/ }),
+
 /***/ 5278:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -494,6 +683,7 @@ exports.issueCommand = issueCommand;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.toCommandProperties = exports.toCommandValue = void 0;
 /**
  * Sanitizes an input into a string so it can be passed into issueCommand safely
  * @param input input to sanitize into a string
@@ -508,7 +698,703 @@ function toCommandValue(input) {
     return JSON.stringify(input);
 }
 exports.toCommandValue = toCommandValue;
+/**
+ *
+ * @param annotationProperties
+ * @returns The command properties to send with the actual annotation command
+ * See IssueCommandProperties: https://github.com/actions/runner/blob/main/src/Runner.Worker/ActionCommandManager.cs#L646
+ */
+function toCommandProperties(annotationProperties) {
+    if (!Object.keys(annotationProperties).length) {
+        return {};
+    }
+    return {
+        title: annotationProperties.title,
+        file: annotationProperties.file,
+        line: annotationProperties.startLine,
+        endLine: annotationProperties.endLine,
+        col: annotationProperties.startColumn,
+        endColumn: annotationProperties.endColumn
+    };
+}
+exports.toCommandProperties = toCommandProperties;
 //# sourceMappingURL=utils.js.map
+
+/***/ }),
+
+/***/ 3702:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class BasicCredentialHandler {
+    constructor(username, password) {
+        this.username = username;
+        this.password = password;
+    }
+    prepareRequest(options) {
+        options.headers['Authorization'] =
+            'Basic ' +
+                Buffer.from(this.username + ':' + this.password).toString('base64');
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.BasicCredentialHandler = BasicCredentialHandler;
+class BearerCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        options.headers['Authorization'] = 'Bearer ' + this.token;
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.BearerCredentialHandler = BearerCredentialHandler;
+class PersonalAccessTokenCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        options.headers['Authorization'] =
+            'Basic ' + Buffer.from('PAT:' + this.token).toString('base64');
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHandler;
+
+
+/***/ }),
+
+/***/ 9925:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const http = __nccwpck_require__(8605);
+const https = __nccwpck_require__(7211);
+const pm = __nccwpck_require__(6443);
+let tunnel;
+var HttpCodes;
+(function (HttpCodes) {
+    HttpCodes[HttpCodes["OK"] = 200] = "OK";
+    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
+    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
+    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
+    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
+    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
+    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
+    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
+    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
+    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
+    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
+    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
+    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
+    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
+    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
+    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
+    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
+    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
+    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
+    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
+    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
+    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
+    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
+})(HttpCodes = exports.HttpCodes || (exports.HttpCodes = {}));
+var Headers;
+(function (Headers) {
+    Headers["Accept"] = "accept";
+    Headers["ContentType"] = "content-type";
+})(Headers = exports.Headers || (exports.Headers = {}));
+var MediaTypes;
+(function (MediaTypes) {
+    MediaTypes["ApplicationJson"] = "application/json";
+})(MediaTypes = exports.MediaTypes || (exports.MediaTypes = {}));
+/**
+ * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
+ * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+ */
+function getProxyUrl(serverUrl) {
+    let proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+    return proxyUrl ? proxyUrl.href : '';
+}
+exports.getProxyUrl = getProxyUrl;
+const HttpRedirectCodes = [
+    HttpCodes.MovedPermanently,
+    HttpCodes.ResourceMoved,
+    HttpCodes.SeeOther,
+    HttpCodes.TemporaryRedirect,
+    HttpCodes.PermanentRedirect
+];
+const HttpResponseRetryCodes = [
+    HttpCodes.BadGateway,
+    HttpCodes.ServiceUnavailable,
+    HttpCodes.GatewayTimeout
+];
+const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+const ExponentialBackoffCeiling = 10;
+const ExponentialBackoffTimeSlice = 5;
+class HttpClientError extends Error {
+    constructor(message, statusCode) {
+        super(message);
+        this.name = 'HttpClientError';
+        this.statusCode = statusCode;
+        Object.setPrototypeOf(this, HttpClientError.prototype);
+    }
+}
+exports.HttpClientError = HttpClientError;
+class HttpClientResponse {
+    constructor(message) {
+        this.message = message;
+    }
+    readBody() {
+        return new Promise(async (resolve, reject) => {
+            let output = Buffer.alloc(0);
+            this.message.on('data', (chunk) => {
+                output = Buffer.concat([output, chunk]);
+            });
+            this.message.on('end', () => {
+                resolve(output.toString());
+            });
+        });
+    }
+}
+exports.HttpClientResponse = HttpClientResponse;
+function isHttps(requestUrl) {
+    let parsedUrl = new URL(requestUrl);
+    return parsedUrl.protocol === 'https:';
+}
+exports.isHttps = isHttps;
+class HttpClient {
+    constructor(userAgent, handlers, requestOptions) {
+        this._ignoreSslError = false;
+        this._allowRedirects = true;
+        this._allowRedirectDowngrade = false;
+        this._maxRedirects = 50;
+        this._allowRetries = false;
+        this._maxRetries = 1;
+        this._keepAlive = false;
+        this._disposed = false;
+        this.userAgent = userAgent;
+        this.handlers = handlers || [];
+        this.requestOptions = requestOptions;
+        if (requestOptions) {
+            if (requestOptions.ignoreSslError != null) {
+                this._ignoreSslError = requestOptions.ignoreSslError;
+            }
+            this._socketTimeout = requestOptions.socketTimeout;
+            if (requestOptions.allowRedirects != null) {
+                this._allowRedirects = requestOptions.allowRedirects;
+            }
+            if (requestOptions.allowRedirectDowngrade != null) {
+                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+            }
+            if (requestOptions.maxRedirects != null) {
+                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+            }
+            if (requestOptions.keepAlive != null) {
+                this._keepAlive = requestOptions.keepAlive;
+            }
+            if (requestOptions.allowRetries != null) {
+                this._allowRetries = requestOptions.allowRetries;
+            }
+            if (requestOptions.maxRetries != null) {
+                this._maxRetries = requestOptions.maxRetries;
+            }
+        }
+    }
+    options(requestUrl, additionalHeaders) {
+        return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+    }
+    get(requestUrl, additionalHeaders) {
+        return this.request('GET', requestUrl, null, additionalHeaders || {});
+    }
+    del(requestUrl, additionalHeaders) {
+        return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+    }
+    post(requestUrl, data, additionalHeaders) {
+        return this.request('POST', requestUrl, data, additionalHeaders || {});
+    }
+    patch(requestUrl, data, additionalHeaders) {
+        return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+    }
+    put(requestUrl, data, additionalHeaders) {
+        return this.request('PUT', requestUrl, data, additionalHeaders || {});
+    }
+    head(requestUrl, additionalHeaders) {
+        return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+    }
+    sendStream(verb, requestUrl, stream, additionalHeaders) {
+        return this.request(verb, requestUrl, stream, additionalHeaders);
+    }
+    /**
+     * Gets a typed object from an endpoint
+     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+     */
+    async getJson(requestUrl, additionalHeaders = {}) {
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        let res = await this.get(requestUrl, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    async postJson(requestUrl, obj, additionalHeaders = {}) {
+        let data = JSON.stringify(obj, null, 2);
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        let res = await this.post(requestUrl, data, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    async putJson(requestUrl, obj, additionalHeaders = {}) {
+        let data = JSON.stringify(obj, null, 2);
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        let res = await this.put(requestUrl, data, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    async patchJson(requestUrl, obj, additionalHeaders = {}) {
+        let data = JSON.stringify(obj, null, 2);
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        let res = await this.patch(requestUrl, data, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    /**
+     * Makes a raw http request.
+     * All other methods such as get, post, patch, and request ultimately call this.
+     * Prefer get, del, post and patch
+     */
+    async request(verb, requestUrl, data, headers) {
+        if (this._disposed) {
+            throw new Error('Client has already been disposed.');
+        }
+        let parsedUrl = new URL(requestUrl);
+        let info = this._prepareRequest(verb, parsedUrl, headers);
+        // Only perform retries on reads since writes may not be idempotent.
+        let maxTries = this._allowRetries && RetryableHttpVerbs.indexOf(verb) != -1
+            ? this._maxRetries + 1
+            : 1;
+        let numTries = 0;
+        let response;
+        while (numTries < maxTries) {
+            response = await this.requestRaw(info, data);
+            // Check if it's an authentication challenge
+            if (response &&
+                response.message &&
+                response.message.statusCode === HttpCodes.Unauthorized) {
+                let authenticationHandler;
+                for (let i = 0; i < this.handlers.length; i++) {
+                    if (this.handlers[i].canHandleAuthentication(response)) {
+                        authenticationHandler = this.handlers[i];
+                        break;
+                    }
+                }
+                if (authenticationHandler) {
+                    return authenticationHandler.handleAuthentication(this, info, data);
+                }
+                else {
+                    // We have received an unauthorized response but have no handlers to handle it.
+                    // Let the response return to the caller.
+                    return response;
+                }
+            }
+            let redirectsRemaining = this._maxRedirects;
+            while (HttpRedirectCodes.indexOf(response.message.statusCode) != -1 &&
+                this._allowRedirects &&
+                redirectsRemaining > 0) {
+                const redirectUrl = response.message.headers['location'];
+                if (!redirectUrl) {
+                    // if there's no location to redirect to, we won't
+                    break;
+                }
+                let parsedRedirectUrl = new URL(redirectUrl);
+                if (parsedUrl.protocol == 'https:' &&
+                    parsedUrl.protocol != parsedRedirectUrl.protocol &&
+                    !this._allowRedirectDowngrade) {
+                    throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+                }
+                // we need to finish reading the response before reassigning response
+                // which will leak the open socket.
+                await response.readBody();
+                // strip authorization header if redirected to a different hostname
+                if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+                    for (let header in headers) {
+                        // header names are case insensitive
+                        if (header.toLowerCase() === 'authorization') {
+                            delete headers[header];
+                        }
+                    }
+                }
+                // let's make the request with the new redirectUrl
+                info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+                response = await this.requestRaw(info, data);
+                redirectsRemaining--;
+            }
+            if (HttpResponseRetryCodes.indexOf(response.message.statusCode) == -1) {
+                // If not a retry code, return immediately instead of retrying
+                return response;
+            }
+            numTries += 1;
+            if (numTries < maxTries) {
+                await response.readBody();
+                await this._performExponentialBackoff(numTries);
+            }
+        }
+        return response;
+    }
+    /**
+     * Needs to be called if keepAlive is set to true in request options.
+     */
+    dispose() {
+        if (this._agent) {
+            this._agent.destroy();
+        }
+        this._disposed = true;
+    }
+    /**
+     * Raw request.
+     * @param info
+     * @param data
+     */
+    requestRaw(info, data) {
+        return new Promise((resolve, reject) => {
+            let callbackForResult = function (err, res) {
+                if (err) {
+                    reject(err);
+                }
+                resolve(res);
+            };
+            this.requestRawWithCallback(info, data, callbackForResult);
+        });
+    }
+    /**
+     * Raw request with callback.
+     * @param info
+     * @param data
+     * @param onResult
+     */
+    requestRawWithCallback(info, data, onResult) {
+        let socket;
+        if (typeof data === 'string') {
+            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+        }
+        let callbackCalled = false;
+        let handleResult = (err, res) => {
+            if (!callbackCalled) {
+                callbackCalled = true;
+                onResult(err, res);
+            }
+        };
+        let req = info.httpModule.request(info.options, (msg) => {
+            let res = new HttpClientResponse(msg);
+            handleResult(null, res);
+        });
+        req.on('socket', sock => {
+            socket = sock;
+        });
+        // If we ever get disconnected, we want the socket to timeout eventually
+        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+            if (socket) {
+                socket.end();
+            }
+            handleResult(new Error('Request timeout: ' + info.options.path), null);
+        });
+        req.on('error', function (err) {
+            // err has statusCode property
+            // res should have headers
+            handleResult(err, null);
+        });
+        if (data && typeof data === 'string') {
+            req.write(data, 'utf8');
+        }
+        if (data && typeof data !== 'string') {
+            data.on('close', function () {
+                req.end();
+            });
+            data.pipe(req);
+        }
+        else {
+            req.end();
+        }
+    }
+    /**
+     * Gets an http agent. This function is useful when you need an http agent that handles
+     * routing through a proxy server - depending upon the url and proxy environment variables.
+     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+     */
+    getAgent(serverUrl) {
+        let parsedUrl = new URL(serverUrl);
+        return this._getAgent(parsedUrl);
+    }
+    _prepareRequest(method, requestUrl, headers) {
+        const info = {};
+        info.parsedUrl = requestUrl;
+        const usingSsl = info.parsedUrl.protocol === 'https:';
+        info.httpModule = usingSsl ? https : http;
+        const defaultPort = usingSsl ? 443 : 80;
+        info.options = {};
+        info.options.host = info.parsedUrl.hostname;
+        info.options.port = info.parsedUrl.port
+            ? parseInt(info.parsedUrl.port)
+            : defaultPort;
+        info.options.path =
+            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+        info.options.method = method;
+        info.options.headers = this._mergeHeaders(headers);
+        if (this.userAgent != null) {
+            info.options.headers['user-agent'] = this.userAgent;
+        }
+        info.options.agent = this._getAgent(info.parsedUrl);
+        // gives handlers an opportunity to participate
+        if (this.handlers) {
+            this.handlers.forEach(handler => {
+                handler.prepareRequest(info.options);
+            });
+        }
+        return info;
+    }
+    _mergeHeaders(headers) {
+        const lowercaseKeys = obj => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+        if (this.requestOptions && this.requestOptions.headers) {
+            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers));
+        }
+        return lowercaseKeys(headers || {});
+    }
+    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+        const lowercaseKeys = obj => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+        let clientHeader;
+        if (this.requestOptions && this.requestOptions.headers) {
+            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
+        }
+        return additionalHeaders[header] || clientHeader || _default;
+    }
+    _getAgent(parsedUrl) {
+        let agent;
+        let proxyUrl = pm.getProxyUrl(parsedUrl);
+        let useProxy = proxyUrl && proxyUrl.hostname;
+        if (this._keepAlive && useProxy) {
+            agent = this._proxyAgent;
+        }
+        if (this._keepAlive && !useProxy) {
+            agent = this._agent;
+        }
+        // if agent is already assigned use that agent.
+        if (!!agent) {
+            return agent;
+        }
+        const usingSsl = parsedUrl.protocol === 'https:';
+        let maxSockets = 100;
+        if (!!this.requestOptions) {
+            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+        }
+        if (useProxy) {
+            // If using proxy, need tunnel
+            if (!tunnel) {
+                tunnel = __nccwpck_require__(4294);
+            }
+            const agentOptions = {
+                maxSockets: maxSockets,
+                keepAlive: this._keepAlive,
+                proxy: {
+                    ...((proxyUrl.username || proxyUrl.password) && {
+                        proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+                    }),
+                    host: proxyUrl.hostname,
+                    port: proxyUrl.port
+                }
+            };
+            let tunnelAgent;
+            const overHttps = proxyUrl.protocol === 'https:';
+            if (usingSsl) {
+                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+            }
+            else {
+                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+            }
+            agent = tunnelAgent(agentOptions);
+            this._proxyAgent = agent;
+        }
+        // if reusing agent across request and tunneling agent isn't assigned create a new agent
+        if (this._keepAlive && !agent) {
+            const options = { keepAlive: this._keepAlive, maxSockets: maxSockets };
+            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+            this._agent = agent;
+        }
+        // if not using private agent and tunnel agent isn't setup then use global agent
+        if (!agent) {
+            agent = usingSsl ? https.globalAgent : http.globalAgent;
+        }
+        if (usingSsl && this._ignoreSslError) {
+            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+            // we have to cast it to any and change it directly
+            agent.options = Object.assign(agent.options || {}, {
+                rejectUnauthorized: false
+            });
+        }
+        return agent;
+    }
+    _performExponentialBackoff(retryNumber) {
+        retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+        const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+        return new Promise(resolve => setTimeout(() => resolve(), ms));
+    }
+    static dateTimeDeserializer(key, value) {
+        if (typeof value === 'string') {
+            let a = new Date(value);
+            if (!isNaN(a.valueOf())) {
+                return a;
+            }
+        }
+        return value;
+    }
+    async _processResponse(res, options) {
+        return new Promise(async (resolve, reject) => {
+            const statusCode = res.message.statusCode;
+            const response = {
+                statusCode: statusCode,
+                result: null,
+                headers: {}
+            };
+            // not found leads to null obj returned
+            if (statusCode == HttpCodes.NotFound) {
+                resolve(response);
+            }
+            let obj;
+            let contents;
+            // get the result from the body
+            try {
+                contents = await res.readBody();
+                if (contents && contents.length > 0) {
+                    if (options && options.deserializeDates) {
+                        obj = JSON.parse(contents, HttpClient.dateTimeDeserializer);
+                    }
+                    else {
+                        obj = JSON.parse(contents);
+                    }
+                    response.result = obj;
+                }
+                response.headers = res.message.headers;
+            }
+            catch (err) {
+                // Invalid resource (contents not json);  leaving result obj null
+            }
+            // note that 3xx redirects are handled by the http layer.
+            if (statusCode > 299) {
+                let msg;
+                // if exception/error in body, attempt to get better error
+                if (obj && obj.message) {
+                    msg = obj.message;
+                }
+                else if (contents && contents.length > 0) {
+                    // it may be the case that the exception is in the body message as string
+                    msg = contents;
+                }
+                else {
+                    msg = 'Failed request: (' + statusCode + ')';
+                }
+                let err = new HttpClientError(msg, statusCode);
+                err.result = response.result;
+                reject(err);
+            }
+            else {
+                resolve(response);
+            }
+        });
+    }
+}
+exports.HttpClient = HttpClient;
+
+
+/***/ }),
+
+/***/ 6443:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+function getProxyUrl(reqUrl) {
+    let usingSsl = reqUrl.protocol === 'https:';
+    let proxyUrl;
+    if (checkBypass(reqUrl)) {
+        return proxyUrl;
+    }
+    let proxyVar;
+    if (usingSsl) {
+        proxyVar = process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+    }
+    else {
+        proxyVar = process.env['http_proxy'] || process.env['HTTP_PROXY'];
+    }
+    if (proxyVar) {
+        proxyUrl = new URL(proxyVar);
+    }
+    return proxyUrl;
+}
+exports.getProxyUrl = getProxyUrl;
+function checkBypass(reqUrl) {
+    if (!reqUrl.hostname) {
+        return false;
+    }
+    let noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+    if (!noProxy) {
+        return false;
+    }
+    // Determine the request port
+    let reqPort;
+    if (reqUrl.port) {
+        reqPort = Number(reqUrl.port);
+    }
+    else if (reqUrl.protocol === 'http:') {
+        reqPort = 80;
+    }
+    else if (reqUrl.protocol === 'https:') {
+        reqPort = 443;
+    }
+    // Format the request hostname and hostname with port
+    let upperReqHosts = [reqUrl.hostname.toUpperCase()];
+    if (typeof reqPort === 'number') {
+        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+    }
+    // Compare request host against noproxy
+    for (let upperNoProxyItem of noProxy
+        .split(',')
+        .map(x => x.trim().toUpperCase())
+        .filter(x => x)) {
+        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.checkBypass = checkBypass;
+
 
 /***/ }),
 
@@ -12908,6 +13794,30 @@ class ArtifactsWaiter {
             return oci_common_1.genericTerminalConditionWaiter(this.config, () => this.client.getContainerRepository(request), response => targetStates.includes(response.containerRepository.lifecycleState), targetStates.includes(models.ContainerRepository.LifecycleState.Deleted));
         });
     }
+    /**
+     * Waits forGenericArtifact till it reaches any of the provided states
+     *
+     * @param request the request to send
+     * @param targetStates the desired states to wait for. The waiter will return once the resource reaches any of the provided states
+     * @return response returns GetGenericArtifactResponse | null (null in case of 404 response)
+     */
+    forGenericArtifact(request, ...targetStates) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return oci_common_1.genericTerminalConditionWaiter(this.config, () => this.client.getGenericArtifact(request), response => targetStates.includes(response.genericArtifact.lifecycleState), targetStates.includes(models.GenericArtifact.LifecycleState.Deleted));
+        });
+    }
+    /**
+     * Waits forRepository till it reaches any of the provided states
+     *
+     * @param request the request to send
+     * @param targetStates the desired states to wait for. The waiter will return once the resource reaches any of the provided states
+     * @return response returns GetRepositoryResponse | null (null in case of 404 response)
+     */
+    forRepository(request, ...targetStates) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return oci_common_1.genericTerminalConditionWaiter(this.config, () => this.client.getRepository(request), response => targetStates.includes(response.repository.lifecycleState), targetStates.includes(models.Repository.LifecycleState.Deleted));
+        });
+    }
 }
 exports.ArtifactsWaiter = ArtifactsWaiter;
 //# sourceMappingURL=artifacts-waiter.js.map
@@ -12964,7 +13874,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ArtifactsClient = exports.ArtifactsApiKeys = void 0;
 const common = __nccwpck_require__(5049);
-const models = __importStar(__nccwpck_require__(2972));
+const model = __importStar(__nccwpck_require__(2972));
 const artifacts_waiter_1 = __nccwpck_require__(7147);
 const oci_common_1 = __nccwpck_require__(5049);
 // ===============================================
@@ -13064,7 +13974,7 @@ class ArtifactsClient {
      * @param ChangeContainerRepositoryCompartmentRequest
      * @return ChangeContainerRepositoryCompartmentResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/ChangeContainerRepositoryCompartment.ts.html |here} to see how to use ChangeContainerRepositoryCompartment API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/ChangeContainerRepositoryCompartment.ts.html |here} to see how to use ChangeContainerRepositoryCompartment API.
      */
     changeContainerRepositoryCompartment(changeContainerRepositoryCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13080,19 +13990,75 @@ class ArtifactsClient {
                 "opc-request-id": changeContainerRepositoryCompartmentRequest.opcRequestId,
                 "opc-retry-token": changeContainerRepositoryCompartmentRequest.opcRetryToken
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, changeContainerRepositoryCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/container/repositories/{repositoryId}/actions/changeCompartment",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(changeContainerRepositoryCompartmentRequest.changeContainerRepositoryCompartmentDetails, "ChangeContainerRepositoryCompartmentDetails", models.ChangeContainerRepositoryCompartmentDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(changeContainerRepositoryCompartmentRequest.changeContainerRepositoryCompartmentDetails, "ChangeContainerRepositoryCompartmentDetails", model.ChangeContainerRepositoryCompartmentDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, changeContainerRepositoryCompartmentRequest.retryConfiguration);
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Moves a repository into a different compartment within the same tenancy. For information about moving
+     * resources between compartments, see
+     * [Moving Resources to a Different Compartment](https://docs.cloud.oracle.com/iaas/Content/Identity/Tasks/managingcompartments.htm#moveRes).
+     *
+     * @param ChangeRepositoryCompartmentRequest
+     * @return ChangeRepositoryCompartmentResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/ChangeRepositoryCompartment.ts.html |here} to see how to use ChangeRepositoryCompartment API.
+     */
+    changeRepositoryCompartment(changeRepositoryCompartmentRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#changeRepositoryCompartment.");
+            const pathParams = {
+                "{repositoryId}": changeRepositoryCompartmentRequest.repositoryId
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "if-match": changeRepositoryCompartmentRequest.ifMatch,
+                "opc-request-id": changeRepositoryCompartmentRequest.opcRequestId,
+                "opc-retry-token": changeRepositoryCompartmentRequest.opcRetryToken
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, changeRepositoryCompartmentRequest.retryConfiguration);
             if (this.logger)
                 retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/repositories/{repositoryId}/actions/changeCompartment",
+                method: "POST",
+                bodyContent: common.ObjectSerializer.serialize(changeRepositoryCompartmentRequest.changeRepositoryCompartmentDetails, "ChangeRepositoryCompartmentDetails", model.ChangeRepositoryCompartmentDetails.getJsonObj),
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
@@ -13117,7 +14083,7 @@ class ArtifactsClient {
      * @param CreateContainerImageSignatureRequest
      * @return CreateContainerImageSignatureResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/CreateContainerImageSignature.ts.html |here} to see how to use CreateContainerImageSignature API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/CreateContainerImageSignature.ts.html |here} to see how to use CreateContainerImageSignature API.
      */
     createContainerImageSignature(createContainerImageSignatureRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13131,26 +14097,27 @@ class ArtifactsClient {
                 "opc-retry-token": createContainerImageSignatureRequest.opcRetryToken,
                 "if-match": createContainerImageSignatureRequest.ifMatch
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createContainerImageSignatureRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/container/imageSignatures",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createContainerImageSignatureRequest.createContainerImageSignatureDetails, "CreateContainerImageSignatureDetails", models.CreateContainerImageSignatureDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createContainerImageSignatureRequest.createContainerImageSignatureDetails, "CreateContainerImageSignatureDetails", model.CreateContainerImageSignatureDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createContainerImageSignatureRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerImageSignature",
-                    bodyModel: "model.ContainerImageSignature",
+                    bodyModel: model.ContainerImageSignature,
+                    type: "model.ContainerImageSignature",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13176,7 +14143,7 @@ class ArtifactsClient {
      * @param CreateContainerRepositoryRequest
      * @return CreateContainerRepositoryResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/CreateContainerRepository.ts.html |here} to see how to use CreateContainerRepository API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/CreateContainerRepository.ts.html |here} to see how to use CreateContainerRepository API.
      */
     createContainerRepository(createContainerRepositoryRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13189,26 +14156,86 @@ class ArtifactsClient {
                 "opc-request-id": createContainerRepositoryRequest.opcRequestId,
                 "opc-retry-token": createContainerRepositoryRequest.opcRetryToken
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createContainerRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/container/repositories",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createContainerRepositoryRequest.createContainerRepositoryDetails, "CreateContainerRepositoryDetails", models.CreateContainerRepositoryDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createContainerRepositoryRequest.createContainerRepositoryDetails, "CreateContainerRepositoryDetails", model.CreateContainerRepositoryDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createContainerRepositoryRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerRepository",
-                    bodyModel: "model.ContainerRepository",
+                    bodyModel: model.ContainerRepository,
+                    type: "model.ContainerRepository",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("etag"),
+                            key: "etag",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Creates a new repository for storing artifacts.
+     * @param CreateRepositoryRequest
+     * @return CreateRepositoryResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/CreateRepository.ts.html |here} to see how to use CreateRepository API.
+     */
+    createRepository(createRepositoryRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#createRepository.");
+            const pathParams = {};
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "opc-request-id": createRepositoryRequest.opcRequestId,
+                "opc-retry-token": createRepositoryRequest.opcRetryToken
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/repositories",
+                method: "POST",
+                bodyContent: common.ObjectSerializer.serialize(createRepositoryRequest.createRepositoryDetails, "CreateRepositoryDetails", model.CreateRepositoryDetails.getJsonObj),
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "repository",
+                    bodyModel: model.Repository,
+                    type: "model.Repository",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13234,7 +14261,7 @@ class ArtifactsClient {
      * @param DeleteContainerImageRequest
      * @return DeleteContainerImageResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/DeleteContainerImage.ts.html |here} to see how to use DeleteContainerImage API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/DeleteContainerImage.ts.html |here} to see how to use DeleteContainerImage API.
      */
     deleteContainerImage(deleteContainerImageRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13249,6 +14276,9 @@ class ArtifactsClient {
                 "if-match": deleteContainerImageRequest.ifMatch,
                 "opc-request-id": deleteContainerImageRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteContainerImageRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13258,9 +14288,6 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteContainerImageRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
@@ -13285,7 +14312,7 @@ class ArtifactsClient {
      * @param DeleteContainerImageSignatureRequest
      * @return DeleteContainerImageSignatureResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/DeleteContainerImageSignature.ts.html |here} to see how to use DeleteContainerImageSignature API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/DeleteContainerImageSignature.ts.html |here} to see how to use DeleteContainerImageSignature API.
      */
     deleteContainerImageSignature(deleteContainerImageSignatureRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13300,6 +14327,9 @@ class ArtifactsClient {
                 "opc-request-id": deleteContainerImageSignatureRequest.opcRequestId,
                 "if-match": deleteContainerImageSignatureRequest.ifMatch
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteContainerImageSignatureRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13309,9 +14339,6 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteContainerImageSignatureRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
@@ -13336,7 +14363,7 @@ class ArtifactsClient {
      * @param DeleteContainerRepositoryRequest
      * @return DeleteContainerRepositoryResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/DeleteContainerRepository.ts.html |here} to see how to use DeleteContainerRepository API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/DeleteContainerRepository.ts.html |here} to see how to use DeleteContainerRepository API.
      */
     deleteContainerRepository(deleteContainerRepositoryRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13351,6 +14378,9 @@ class ArtifactsClient {
                 "if-match": deleteContainerRepositoryRequest.ifMatch,
                 "opc-request-id": deleteContainerRepositoryRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteContainerRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13360,9 +14390,161 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteContainerRepositoryRequest.retryConfiguration);
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Deletes an artifact with a specified [OCID](https://docs.cloud.oracle.com/iaas/Content/General/Concepts/identifiers.htm).
+     * @param DeleteGenericArtifactRequest
+     * @return DeleteGenericArtifactResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/DeleteGenericArtifact.ts.html |here} to see how to use DeleteGenericArtifact API.
+     */
+    deleteGenericArtifact(deleteGenericArtifactRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#deleteGenericArtifact.");
+            const pathParams = {
+                "{artifactId}": deleteGenericArtifactRequest.artifactId
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "if-match": deleteGenericArtifactRequest.ifMatch,
+                "opc-request-id": deleteGenericArtifactRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteGenericArtifactRequest.retryConfiguration);
             if (this.logger)
                 retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/generic/artifacts/{artifactId}",
+                method: "DELETE",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Deletes an artifact with a specified `artifactPath` and `version`.
+     * @param DeleteGenericArtifactByPathRequest
+     * @return DeleteGenericArtifactByPathResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/DeleteGenericArtifactByPath.ts.html |here} to see how to use DeleteGenericArtifactByPath API.
+     */
+    deleteGenericArtifactByPath(deleteGenericArtifactByPathRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#deleteGenericArtifactByPath.");
+            const pathParams = {
+                "{repositoryId}": deleteGenericArtifactByPathRequest.repositoryId,
+                "{artifactPath}": deleteGenericArtifactByPathRequest.artifactPath,
+                "{version}": deleteGenericArtifactByPathRequest.version
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "if-match": deleteGenericArtifactByPathRequest.ifMatch,
+                "opc-request-id": deleteGenericArtifactByPathRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteGenericArtifactByPathRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/generic/repositories/{repositoryId}/artifactPaths/{artifactPath}/versions/{version}",
+                method: "DELETE",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Deletes the specified repository. This operation fails unless all associated artifacts are in a DELETED state. You must delete all associated artifacts before deleting a repository.
+     * @param DeleteRepositoryRequest
+     * @return DeleteRepositoryResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/DeleteRepository.ts.html |here} to see how to use DeleteRepository API.
+     */
+    deleteRepository(deleteRepositoryRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#deleteRepository.");
+            const pathParams = {
+                "{repositoryId}": deleteRepositoryRequest.repositoryId
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "if-match": deleteRepositoryRequest.ifMatch,
+                "opc-request-id": deleteRepositoryRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/repositories/{repositoryId}",
+                method: "DELETE",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
@@ -13387,7 +14569,7 @@ class ArtifactsClient {
      * @param GetContainerConfigurationRequest
      * @return GetContainerConfigurationResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/GetContainerConfiguration.ts.html |here} to see how to use GetContainerConfiguration API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/GetContainerConfiguration.ts.html |here} to see how to use GetContainerConfiguration API.
      */
     getContainerConfiguration(getContainerConfigurationRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13401,6 +14583,9 @@ class ArtifactsClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-request-id": getContainerConfigurationRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerConfigurationRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13410,16 +14595,14 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerConfigurationRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerConfiguration",
-                    bodyModel: "model.ContainerConfiguration",
+                    bodyModel: model.ContainerConfiguration,
+                    type: "model.ContainerConfiguration",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13445,7 +14628,7 @@ class ArtifactsClient {
      * @param GetContainerImageRequest
      * @return GetContainerImageResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/GetContainerImage.ts.html |here} to see how to use GetContainerImage API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/GetContainerImage.ts.html |here} to see how to use GetContainerImage API.
      */
     getContainerImage(getContainerImageRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13459,6 +14642,9 @@ class ArtifactsClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-request-id": getContainerImageRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerImageRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13468,16 +14654,14 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerImageRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerImage",
-                    bodyModel: "model.ContainerImage",
+                    bodyModel: model.ContainerImage,
+                    type: "model.ContainerImage",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13503,7 +14687,7 @@ class ArtifactsClient {
      * @param GetContainerImageSignatureRequest
      * @return GetContainerImageSignatureResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/GetContainerImageSignature.ts.html |here} to see how to use GetContainerImageSignature API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/GetContainerImageSignature.ts.html |here} to see how to use GetContainerImageSignature API.
      */
     getContainerImageSignature(getContainerImageSignatureRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13517,6 +14701,9 @@ class ArtifactsClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-request-id": getContainerImageSignatureRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerImageSignatureRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13526,16 +14713,14 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerImageSignatureRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerImageSignature",
-                    bodyModel: "model.ContainerImageSignature",
+                    bodyModel: model.ContainerImageSignature,
+                    type: "model.ContainerImageSignature",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13561,7 +14746,7 @@ class ArtifactsClient {
      * @param GetContainerRepositoryRequest
      * @return GetContainerRepositoryResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/GetContainerRepository.ts.html |here} to see how to use GetContainerRepository API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/GetContainerRepository.ts.html |here} to see how to use GetContainerRepository API.
      */
     getContainerRepository(getContainerRepositoryRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13575,6 +14760,9 @@ class ArtifactsClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-request-id": getContainerRepositoryRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13584,16 +14772,193 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getContainerRepositoryRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerRepository",
-                    bodyModel: "model.ContainerRepository",
+                    bodyModel: model.ContainerRepository,
+                    type: "model.ContainerRepository",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("etag"),
+                            key: "etag",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Gets information about an artifact with a specified [OCID](https://docs.cloud.oracle.com/iaas/Content/General/Concepts/identifiers.htm).
+     * @param GetGenericArtifactRequest
+     * @return GetGenericArtifactResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/GetGenericArtifact.ts.html |here} to see how to use GetGenericArtifact API.
+     */
+    getGenericArtifact(getGenericArtifactRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#getGenericArtifact.");
+            const pathParams = {
+                "{artifactId}": getGenericArtifactRequest.artifactId
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "opc-request-id": getGenericArtifactRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getGenericArtifactRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/generic/artifacts/{artifactId}",
+                method: "GET",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "genericArtifact",
+                    bodyModel: model.GenericArtifact,
+                    type: "model.GenericArtifact",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("etag"),
+                            key: "etag",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Gets information about an artifact with a specified `artifactPath` and `version`.
+     * @param GetGenericArtifactByPathRequest
+     * @return GetGenericArtifactByPathResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/GetGenericArtifactByPath.ts.html |here} to see how to use GetGenericArtifactByPath API.
+     */
+    getGenericArtifactByPath(getGenericArtifactByPathRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#getGenericArtifactByPath.");
+            const pathParams = {
+                "{repositoryId}": getGenericArtifactByPathRequest.repositoryId,
+                "{artifactPath}": getGenericArtifactByPathRequest.artifactPath,
+                "{version}": getGenericArtifactByPathRequest.version
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "opc-request-id": getGenericArtifactByPathRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getGenericArtifactByPathRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/generic/repositories/{repositoryId}/artifactPaths/{artifactPath}/versions/{version}",
+                method: "GET",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "genericArtifact",
+                    bodyModel: model.GenericArtifact,
+                    type: "model.GenericArtifact",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("etag"),
+                            key: "etag",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Gets the specified repository's information.
+     * @param GetRepositoryRequest
+     * @return GetRepositoryResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/GetRepository.ts.html |here} to see how to use GetRepository API.
+     */
+    getRepository(getRepositoryRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#getRepository.");
+            const pathParams = {
+                "{repositoryId}": getRepositoryRequest.repositoryId
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "opc-request-id": getRepositoryRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/repositories/{repositoryId}",
+                method: "GET",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "repository",
+                    bodyModel: model.Repository,
+                    type: "model.Repository",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13619,7 +14984,7 @@ class ArtifactsClient {
      * @param ListContainerImageSignaturesRequest
      * @return ListContainerImageSignaturesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/ListContainerImageSignatures.ts.html |here} to see how to use ListContainerImageSignatures API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/ListContainerImageSignatures.ts.html |here} to see how to use ListContainerImageSignatures API.
      */
     listContainerImageSignatures(listContainerImageSignaturesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13646,6 +15011,9 @@ class ArtifactsClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-request-id": listContainerImageSignaturesRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listContainerImageSignaturesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13655,16 +15023,14 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listContainerImageSignaturesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerImageSignatureCollection",
-                    bodyModel: "model.ContainerImageSignatureCollection",
+                    bodyModel: model.ContainerImageSignatureCollection,
+                    type: "model.ContainerImageSignatureCollection",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-next-page"),
@@ -13690,7 +15056,7 @@ class ArtifactsClient {
      * @param ListContainerImagesRequest
      * @return ListContainerImagesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/ListContainerImages.ts.html |here} to see how to use ListContainerImages API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/ListContainerImages.ts.html |here} to see how to use ListContainerImages API.
      */
     listContainerImages(listContainerImagesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13716,6 +15082,9 @@ class ArtifactsClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-request-id": listContainerImagesRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listContainerImagesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13725,16 +15094,14 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listContainerImagesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerImageCollection",
-                    bodyModel: "model.ContainerImageCollection",
+                    bodyModel: model.ContainerImageCollection,
+                    type: "model.ContainerImageCollection",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-next-page"),
@@ -13760,7 +15127,7 @@ class ArtifactsClient {
      * @param ListContainerRepositoriesRequest
      * @return ListContainerRepositoriesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/ListContainerRepositories.ts.html |here} to see how to use ListContainerRepositories API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/ListContainerRepositories.ts.html |here} to see how to use ListContainerRepositories API.
      */
     listContainerRepositories(listContainerRepositoriesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13783,6 +15150,9 @@ class ArtifactsClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-request-id": listContainerRepositoriesRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listContainerRepositoriesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -13792,16 +15162,151 @@ class ArtifactsClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listContainerRepositoriesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerRepositoryCollection",
-                    bodyModel: "model.ContainerRepositoryCollection",
+                    bodyModel: model.ContainerRepositoryCollection,
+                    type: "model.ContainerRepositoryCollection",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("opc-next-page"),
+                            key: "opcNextPage",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Lists artifacts in the specified repository.
+     * @param ListGenericArtifactsRequest
+     * @return ListGenericArtifactsResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/ListGenericArtifacts.ts.html |here} to see how to use ListGenericArtifacts API.
+     */
+    listGenericArtifacts(listGenericArtifactsRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#listGenericArtifacts.");
+            const pathParams = {};
+            const queryParams = {
+                "compartmentId": listGenericArtifactsRequest.compartmentId,
+                "repositoryId": listGenericArtifactsRequest.repositoryId,
+                "id": listGenericArtifactsRequest.id,
+                "displayName": listGenericArtifactsRequest.displayName,
+                "artifactPath": listGenericArtifactsRequest.artifactPath,
+                "version": listGenericArtifactsRequest.version,
+                "sha256": listGenericArtifactsRequest.sha256,
+                "lifecycleState": listGenericArtifactsRequest.lifecycleState,
+                "limit": listGenericArtifactsRequest.limit,
+                "page": listGenericArtifactsRequest.page,
+                "sortBy": listGenericArtifactsRequest.sortBy,
+                "sortOrder": listGenericArtifactsRequest.sortOrder
+            };
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "opc-request-id": listGenericArtifactsRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listGenericArtifactsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/generic/artifacts",
+                method: "GET",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "genericArtifactCollection",
+                    bodyModel: model.GenericArtifactCollection,
+                    type: "model.GenericArtifactCollection",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("opc-next-page"),
+                            key: "opcNextPage",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Lists repositories in the specified compartment.
+     * @param ListRepositoriesRequest
+     * @return ListRepositoriesResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/ListRepositories.ts.html |here} to see how to use ListRepositories API.
+     */
+    listRepositories(listRepositoriesRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#listRepositories.");
+            const pathParams = {};
+            const queryParams = {
+                "compartmentId": listRepositoriesRequest.compartmentId,
+                "id": listRepositoriesRequest.id,
+                "displayName": listRepositoriesRequest.displayName,
+                "isImmutable": listRepositoriesRequest.isImmutable,
+                "lifecycleState": listRepositoriesRequest.lifecycleState,
+                "limit": listRepositoriesRequest.limit,
+                "page": listRepositoriesRequest.page,
+                "sortBy": listRepositoriesRequest.sortBy,
+                "sortOrder": listRepositoriesRequest.sortOrder
+            };
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "opc-request-id": listRepositoriesRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listRepositoriesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/repositories",
+                method: "GET",
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "repositoryCollection",
+                    bodyModel: model.RepositoryCollection,
+                    type: "model.RepositoryCollection",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-next-page"),
@@ -13827,7 +15332,7 @@ class ArtifactsClient {
      * @param RemoveContainerVersionRequest
      * @return RemoveContainerVersionResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/RemoveContainerVersion.ts.html |here} to see how to use RemoveContainerVersion API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/RemoveContainerVersion.ts.html |here} to see how to use RemoveContainerVersion API.
      */
     removeContainerVersion(removeContainerVersionRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13843,26 +15348,27 @@ class ArtifactsClient {
                 "opc-request-id": removeContainerVersionRequest.opcRequestId,
                 "opc-retry-token": removeContainerVersionRequest.opcRetryToken
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, removeContainerVersionRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/container/images/{imageId}/actions/removeVersion",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(removeContainerVersionRequest.removeContainerVersionDetails, "RemoveContainerVersionDetails", models.RemoveContainerVersionDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(removeContainerVersionRequest.removeContainerVersionDetails, "RemoveContainerVersionDetails", model.RemoveContainerVersionDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, removeContainerVersionRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerImage",
-                    bodyModel: "model.ContainerImage",
+                    bodyModel: model.ContainerImage,
+                    type: "model.ContainerImage",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13888,7 +15394,7 @@ class ArtifactsClient {
      * @param RestoreContainerImageRequest
      * @return RestoreContainerImageResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/RestoreContainerImage.ts.html |here} to see how to use RestoreContainerImage API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/RestoreContainerImage.ts.html |here} to see how to use RestoreContainerImage API.
      */
     restoreContainerImage(restoreContainerImageRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13904,26 +15410,27 @@ class ArtifactsClient {
                 "opc-request-id": restoreContainerImageRequest.opcRequestId,
                 "opc-retry-token": restoreContainerImageRequest.opcRetryToken
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, restoreContainerImageRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/container/images/{imageId}/actions/restore",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(restoreContainerImageRequest.restoreContainerImageDetails, "RestoreContainerImageDetails", models.RestoreContainerImageDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(restoreContainerImageRequest.restoreContainerImageDetails, "RestoreContainerImageDetails", model.RestoreContainerImageDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, restoreContainerImageRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerImage",
-                    bodyModel: "model.ContainerImage",
+                    bodyModel: model.ContainerImage,
+                    type: "model.ContainerImage",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -13949,7 +15456,7 @@ class ArtifactsClient {
      * @param UpdateContainerConfigurationRequest
      * @return UpdateContainerConfigurationResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/UpdateContainerConfiguration.ts.html |here} to see how to use UpdateContainerConfiguration API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/UpdateContainerConfiguration.ts.html |here} to see how to use UpdateContainerConfiguration API.
      */
     updateContainerConfiguration(updateContainerConfigurationRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13964,26 +15471,27 @@ class ArtifactsClient {
                 "if-match": updateContainerConfigurationRequest.ifMatch,
                 "opc-request-id": updateContainerConfigurationRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateContainerConfigurationRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/container/configuration",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateContainerConfigurationRequest.updateContainerConfigurationDetails, "UpdateContainerConfigurationDetails", models.UpdateContainerConfigurationDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateContainerConfigurationRequest.updateContainerConfigurationDetails, "UpdateContainerConfigurationDetails", model.UpdateContainerConfigurationDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateContainerConfigurationRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerConfiguration",
-                    bodyModel: "model.ContainerConfiguration",
+                    bodyModel: model.ContainerConfiguration,
+                    type: "model.ContainerConfiguration",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -14009,7 +15517,7 @@ class ArtifactsClient {
      * @param UpdateContainerRepositoryRequest
      * @return UpdateContainerRepositoryResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/artifacts/UpdateContainerRepository.ts.html |here} to see how to use UpdateContainerRepository API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/UpdateContainerRepository.ts.html |here} to see how to use UpdateContainerRepository API.
      */
     updateContainerRepository(updateContainerRepositoryRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -14024,26 +15532,212 @@ class ArtifactsClient {
                 "if-match": updateContainerRepositoryRequest.ifMatch,
                 "opc-request-id": updateContainerRepositoryRequest.opcRequestId
             };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateContainerRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_1.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/container/repositories/{repositoryId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateContainerRepositoryRequest.updateContainerRepositoryDetails, "UpdateContainerRepositoryDetails", models.UpdateContainerRepositoryDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateContainerRepositoryRequest.updateContainerRepositoryDetails, "UpdateContainerRepositoryDetails", model.UpdateContainerRepositoryDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateContainerRepositoryRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_1.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "containerRepository",
-                    bodyModel: "model.ContainerRepository",
+                    bodyModel: model.ContainerRepository,
+                    type: "model.ContainerRepository",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("etag"),
+                            key: "etag",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Updates the artifact with the specified [OCID](https://docs.cloud.oracle.com/iaas/Content/General/Concepts/identifiers.htm). You can only update the tags of an artifact.
+     * @param UpdateGenericArtifactRequest
+     * @return UpdateGenericArtifactResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/UpdateGenericArtifact.ts.html |here} to see how to use UpdateGenericArtifact API.
+     */
+    updateGenericArtifact(updateGenericArtifactRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#updateGenericArtifact.");
+            const pathParams = {
+                "{artifactId}": updateGenericArtifactRequest.artifactId
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "if-match": updateGenericArtifactRequest.ifMatch,
+                "opc-request-id": updateGenericArtifactRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateGenericArtifactRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/generic/artifacts/{artifactId}",
+                method: "PUT",
+                bodyContent: common.ObjectSerializer.serialize(updateGenericArtifactRequest.updateGenericArtifactDetails, "UpdateGenericArtifactDetails", model.UpdateGenericArtifactDetails.getJsonObj),
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "genericArtifact",
+                    bodyModel: model.GenericArtifact,
+                    type: "model.GenericArtifact",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("etag"),
+                            key: "etag",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Updates an artifact with a specified `artifactPath` and `version`. You can only update the tags of an artifact.
+     * @param UpdateGenericArtifactByPathRequest
+     * @return UpdateGenericArtifactByPathResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/UpdateGenericArtifactByPath.ts.html |here} to see how to use UpdateGenericArtifactByPath API.
+     */
+    updateGenericArtifactByPath(updateGenericArtifactByPathRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#updateGenericArtifactByPath.");
+            const pathParams = {
+                "{repositoryId}": updateGenericArtifactByPathRequest.repositoryId,
+                "{artifactPath}": updateGenericArtifactByPathRequest.artifactPath,
+                "{version}": updateGenericArtifactByPathRequest.version
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "if-match": updateGenericArtifactByPathRequest.ifMatch,
+                "opc-request-id": updateGenericArtifactByPathRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateGenericArtifactByPathRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/generic/repositories/{repositoryId}/artifactPaths/{artifactPath}/versions/{version}",
+                method: "PUT",
+                bodyContent: common.ObjectSerializer.serialize(updateGenericArtifactByPathRequest.updateGenericArtifactByPathDetails, "UpdateGenericArtifactByPathDetails", model.UpdateGenericArtifactByPathDetails.getJsonObj),
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "genericArtifact",
+                    bodyModel: model.GenericArtifact,
+                    type: "model.GenericArtifact",
+                    responseHeaders: [
+                        {
+                            value: response.headers.get("etag"),
+                            key: "etag",
+                            dataType: "string"
+                        },
+                        {
+                            value: response.headers.get("opc-request-id"),
+                            key: "opcRequestId",
+                            dataType: "string"
+                        }
+                    ]
+                });
+                return sdkResponse;
+            }
+            catch (err) {
+                throw err;
+            }
+        });
+    }
+    /**
+     * Updates the properties of a repository. You can update the `displayName` and  `description` properties.
+     * @param UpdateRepositoryRequest
+     * @return UpdateRepositoryResponse
+     * @throws OciError when an error occurs
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/artifacts/UpdateRepository.ts.html |here} to see how to use UpdateRepository API.
+     */
+    updateRepository(updateRepositoryRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.logger)
+                this.logger.debug("Calling operation ArtifactsClient#updateRepository.");
+            const pathParams = {
+                "{repositoryId}": updateRepositoryRequest.repositoryId
+            };
+            const queryParams = {};
+            let headerParams = {
+                "Content-Type": common.Constants.APPLICATION_JSON,
+                "if-match": updateRepositoryRequest.ifMatch,
+                "opc-request-id": updateRepositoryRequest.opcRequestId
+            };
+            const retrier = oci_common_1.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateRepositoryRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
+            const request = yield oci_common_1.composeRequest({
+                baseEndpoint: this._endpoint,
+                defaultHeaders: this._defaultHeaders,
+                path: "/repositories/{repositoryId}",
+                method: "PUT",
+                bodyContent: common.ObjectSerializer.serialize(updateRepositoryRequest.updateRepositoryDetails, "UpdateRepositoryDetails", model.UpdateRepositoryDetails.getJsonObj),
+                pathParams: pathParams,
+                headerParams: headerParams,
+                queryParams: queryParams
+            });
+            try {
+                const response = yield retrier.makeServiceCall(this._httpClient, request);
+                const sdkResponse = oci_common_1.composeResponse({
+                    responseObject: {},
+                    body: yield response.json(),
+                    bodyKey: "repository",
+                    bodyModel: model.Repository,
+                    type: "model.Repository",
                     responseHeaders: [
                         {
                             value: response.headers.get("etag"),
@@ -14099,8 +15793,51 @@ var ChangeContainerRepositoryCompartmentDetails;
         return jsonObj;
     }
     ChangeContainerRepositoryCompartmentDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ChangeContainerRepositoryCompartmentDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ChangeContainerRepositoryCompartmentDetails = exports.ChangeContainerRepositoryCompartmentDetails || (exports.ChangeContainerRepositoryCompartmentDetails = {}));
 //# sourceMappingURL=change-container-repository-compartment-details.js.map
+
+/***/ }),
+
+/***/ 7231:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChangeRepositoryCompartmentDetails = void 0;
+var ChangeRepositoryCompartmentDetails;
+(function (ChangeRepositoryCompartmentDetails) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ChangeRepositoryCompartmentDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ChangeRepositoryCompartmentDetails.getDeserializedJsonObj = getDeserializedJsonObj;
+})(ChangeRepositoryCompartmentDetails = exports.ChangeRepositoryCompartmentDetails || (exports.ChangeRepositoryCompartmentDetails = {}));
+//# sourceMappingURL=change-repository-compartment-details.js.map
 
 /***/ }),
 
@@ -14132,6 +15869,11 @@ var ContainerConfiguration;
         return jsonObj;
     }
     ContainerConfiguration.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerConfiguration.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerConfiguration = exports.ContainerConfiguration || (exports.ContainerConfiguration = {}));
 //# sourceMappingURL=container-configuration.js.map
 
@@ -14191,6 +15933,17 @@ var ContainerImageCollection;
         return jsonObj;
     }
     ContainerImageCollection.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.ContainerImageSummary.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    ContainerImageCollection.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerImageCollection = exports.ContainerImageCollection || (exports.ContainerImageCollection = {}));
 //# sourceMappingURL=container-image-collection.js.map
 
@@ -14224,6 +15977,11 @@ var ContainerImageLayer;
         return jsonObj;
     }
     ContainerImageLayer.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerImageLayer.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerImageLayer = exports.ContainerImageLayer || (exports.ContainerImageLayer = {}));
 //# sourceMappingURL=container-image-layer.js.map
 
@@ -14283,6 +16041,17 @@ var ContainerImageSignatureCollection;
         return jsonObj;
     }
     ContainerImageSignatureCollection.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.ContainerImageSignatureSummary.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    ContainerImageSignatureCollection.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerImageSignatureCollection = exports.ContainerImageSignatureCollection || (exports.ContainerImageSignatureCollection = {}));
 //# sourceMappingURL=container-image-signature-collection.js.map
 
@@ -14328,6 +16097,11 @@ var ContainerImageSignatureSummary;
         return jsonObj;
     }
     ContainerImageSignatureSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerImageSignatureSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerImageSignatureSummary = exports.ContainerImageSignatureSummary || (exports.ContainerImageSignatureSummary = {}));
 //# sourceMappingURL=container-image-signature-summary.js.map
 
@@ -14373,6 +16147,11 @@ var ContainerImageSignature;
         return jsonObj;
     }
     ContainerImageSignature.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerImageSignature.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerImageSignature = exports.ContainerImageSignature || (exports.ContainerImageSignature = {}));
 //# sourceMappingURL=container-image-signature.js.map
 
@@ -14406,6 +16185,11 @@ var ContainerImageSummary;
         return jsonObj;
     }
     ContainerImageSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerImageSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerImageSummary = exports.ContainerImageSummary || (exports.ContainerImageSummary = {}));
 //# sourceMappingURL=container-image-summary.js.map
 
@@ -14481,6 +16265,22 @@ var ContainerImage;
         return jsonObj;
     }
     ContainerImage.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "layers": obj.layers
+                ? obj.layers.map(item => {
+                    return model.ContainerImageLayer.getDeserializedJsonObj(item);
+                })
+                : undefined,
+            "versions": obj.versions
+                ? obj.versions.map(item => {
+                    return model.ContainerVersion.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    ContainerImage.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerImage = exports.ContainerImage || (exports.ContainerImage = {}));
 //# sourceMappingURL=container-image.js.map
 
@@ -14540,6 +16340,17 @@ var ContainerRepositoryCollection;
         return jsonObj;
     }
     ContainerRepositoryCollection.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.ContainerRepositorySummary.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    ContainerRepositoryCollection.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerRepositoryCollection = exports.ContainerRepositoryCollection || (exports.ContainerRepositoryCollection = {}));
 //# sourceMappingURL=container-repository-collection.js.map
 
@@ -14583,6 +16394,11 @@ var ContainerRepositoryReadme;
         return jsonObj;
     }
     ContainerRepositoryReadme.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerRepositoryReadme.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerRepositoryReadme = exports.ContainerRepositoryReadme || (exports.ContainerRepositoryReadme = {}));
 //# sourceMappingURL=container-repository-readme.js.map
 
@@ -14616,6 +16432,11 @@ var ContainerRepositorySummary;
         return jsonObj;
     }
     ContainerRepositorySummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerRepositorySummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerRepositorySummary = exports.ContainerRepositorySummary || (exports.ContainerRepositorySummary = {}));
 //# sourceMappingURL=container-repository-summary.js.map
 
@@ -14682,6 +16503,15 @@ var ContainerRepository;
         return jsonObj;
     }
     ContainerRepository.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "readme": obj.readme
+                ? model.ContainerRepositoryReadme.getDeserializedJsonObj(obj.readme)
+                : undefined
+        });
+        return jsonObj;
+    }
+    ContainerRepository.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerRepository = exports.ContainerRepository || (exports.ContainerRepository = {}));
 //# sourceMappingURL=container-repository.js.map
 
@@ -14715,6 +16545,11 @@ var ContainerVersion;
         return jsonObj;
     }
     ContainerVersion.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ContainerVersion.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ContainerVersion = exports.ContainerVersion || (exports.ContainerVersion = {}));
 //# sourceMappingURL=container-version.js.map
 
@@ -14755,6 +16590,11 @@ var CreateContainerImageSignatureDetails;
         return jsonObj;
     }
     CreateContainerImageSignatureDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateContainerImageSignatureDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateContainerImageSignatureDetails = exports.CreateContainerImageSignatureDetails || (exports.CreateContainerImageSignatureDetails = {}));
 //# sourceMappingURL=create-container-image-signature-details.js.map
 
@@ -14810,8 +16650,435 @@ var CreateContainerRepositoryDetails;
         return jsonObj;
     }
     CreateContainerRepositoryDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "readme": obj.readme
+                ? model.ContainerRepositoryReadme.getDeserializedJsonObj(obj.readme)
+                : undefined
+        });
+        return jsonObj;
+    }
+    CreateContainerRepositoryDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateContainerRepositoryDetails = exports.CreateContainerRepositoryDetails || (exports.CreateContainerRepositoryDetails = {}));
 //# sourceMappingURL=create-container-repository-details.js.map
+
+/***/ }),
+
+/***/ 8437:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateGenericRepositoryDetails = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var CreateGenericRepositoryDetails;
+(function (CreateGenericRepositoryDetails) {
+    function getJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.CreateRepositoryDetails.getJsonObj(obj))), {});
+        return jsonObj;
+    }
+    CreateGenericRepositoryDetails.getJsonObj = getJsonObj;
+    CreateGenericRepositoryDetails.repositoryType = "GENERIC";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.CreateRepositoryDetails.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    CreateGenericRepositoryDetails.getDeserializedJsonObj = getDeserializedJsonObj;
+})(CreateGenericRepositoryDetails = exports.CreateGenericRepositoryDetails || (exports.CreateGenericRepositoryDetails = {}));
+//# sourceMappingURL=create-generic-repository-details.js.map
+
+/***/ }),
+
+/***/ 7161:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateRepositoryDetails = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var CreateRepositoryDetails;
+(function (CreateRepositoryDetails) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.CreateGenericRepositoryDetails.getJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    CreateRepositoryDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.CreateGenericRepositoryDetails.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    CreateRepositoryDetails.getDeserializedJsonObj = getDeserializedJsonObj;
+})(CreateRepositoryDetails = exports.CreateRepositoryDetails || (exports.CreateRepositoryDetails = {}));
+//# sourceMappingURL=create-repository-details.js.map
+
+/***/ }),
+
+/***/ 746:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GenericArtifactCollection = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var GenericArtifactCollection;
+(function (GenericArtifactCollection) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.GenericArtifactSummary.getJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    GenericArtifactCollection.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.GenericArtifactSummary.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    GenericArtifactCollection.getDeserializedJsonObj = getDeserializedJsonObj;
+})(GenericArtifactCollection = exports.GenericArtifactCollection || (exports.GenericArtifactCollection = {}));
+//# sourceMappingURL=generic-artifact-collection.js.map
+
+/***/ }),
+
+/***/ 2949:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GenericArtifactSummary = void 0;
+var GenericArtifactSummary;
+(function (GenericArtifactSummary) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    GenericArtifactSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    GenericArtifactSummary.getDeserializedJsonObj = getDeserializedJsonObj;
+})(GenericArtifactSummary = exports.GenericArtifactSummary || (exports.GenericArtifactSummary = {}));
+//# sourceMappingURL=generic-artifact-summary.js.map
+
+/***/ }),
+
+/***/ 6359:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GenericArtifact = void 0;
+var GenericArtifact;
+(function (GenericArtifact) {
+    let LifecycleState;
+    (function (LifecycleState) {
+        LifecycleState["Available"] = "AVAILABLE";
+        LifecycleState["Deleting"] = "DELETING";
+        LifecycleState["Deleted"] = "DELETED";
+        /**
+         * This value is used if a service returns a value for this enum that is not recognized by this
+         * version of the SDK.
+         */
+        LifecycleState["UnknownValue"] = "UNKNOWN_VALUE";
+    })(LifecycleState = GenericArtifact.LifecycleState || (GenericArtifact.LifecycleState = {}));
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    GenericArtifact.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    GenericArtifact.getDeserializedJsonObj = getDeserializedJsonObj;
+})(GenericArtifact = exports.GenericArtifact || (exports.GenericArtifact = {}));
+//# sourceMappingURL=generic-artifact.js.map
+
+/***/ }),
+
+/***/ 6803:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GenericRepositorySummary = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var GenericRepositorySummary;
+(function (GenericRepositorySummary) {
+    function getJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.RepositorySummary.getJsonObj(obj))), {});
+        return jsonObj;
+    }
+    GenericRepositorySummary.getJsonObj = getJsonObj;
+    GenericRepositorySummary.repositoryType = "GENERIC";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.RepositorySummary.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    GenericRepositorySummary.getDeserializedJsonObj = getDeserializedJsonObj;
+})(GenericRepositorySummary = exports.GenericRepositorySummary || (exports.GenericRepositorySummary = {}));
+//# sourceMappingURL=generic-repository-summary.js.map
+
+/***/ }),
+
+/***/ 1198:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GenericRepository = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var GenericRepository;
+(function (GenericRepository) {
+    function getJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj ? obj : model.Repository.getJsonObj(obj))), {});
+        return jsonObj;
+    }
+    GenericRepository.getJsonObj = getJsonObj;
+    GenericRepository.repositoryType = "GENERIC";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.Repository.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    GenericRepository.getDeserializedJsonObj = getDeserializedJsonObj;
+})(GenericRepository = exports.GenericRepository || (exports.GenericRepository = {}));
+//# sourceMappingURL=generic-repository.js.map
 
 /***/ }),
 
@@ -14854,9 +17121,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdateContainerRepositoryDetails = exports.UpdateContainerConfigurationDetails = exports.RestoreContainerImageDetails = exports.RemoveContainerVersionDetails = exports.CreateContainerRepositoryDetails = exports.CreateContainerImageSignatureDetails = exports.ContainerVersion = exports.ContainerRepositorySummary = exports.ContainerRepositoryReadme = exports.ContainerRepositoryCollection = exports.ContainerRepository = exports.ContainerImageSummary = exports.ContainerImageSignatureSummary = exports.ContainerImageSignatureCollection = exports.ContainerImageSignature = exports.ContainerImageLayer = exports.ContainerImageCollection = exports.ContainerImage = exports.ContainerConfiguration = exports.ChangeContainerRepositoryCompartmentDetails = void 0;
+exports.UpdateGenericRepositoryDetails = exports.GenericRepositorySummary = exports.GenericRepository = exports.CreateGenericRepositoryDetails = exports.UpdateRepositoryDetails = exports.UpdateGenericArtifactDetails = exports.UpdateGenericArtifactByPathDetails = exports.UpdateContainerRepositoryDetails = exports.UpdateContainerConfigurationDetails = exports.RestoreContainerImageDetails = exports.RepositorySummary = exports.RepositoryCollection = exports.Repository = exports.RemoveContainerVersionDetails = exports.GenericArtifactSummary = exports.GenericArtifactCollection = exports.GenericArtifact = exports.CreateRepositoryDetails = exports.CreateContainerRepositoryDetails = exports.CreateContainerImageSignatureDetails = exports.ContainerVersion = exports.ContainerRepositorySummary = exports.ContainerRepositoryReadme = exports.ContainerRepositoryCollection = exports.ContainerRepository = exports.ContainerImageSummary = exports.ContainerImageSignatureSummary = exports.ContainerImageSignatureCollection = exports.ContainerImageSignature = exports.ContainerImageLayer = exports.ContainerImageCollection = exports.ContainerImage = exports.ContainerConfiguration = exports.ChangeRepositoryCompartmentDetails = exports.ChangeContainerRepositoryCompartmentDetails = void 0;
 const ChangeContainerRepositoryCompartmentDetails = __importStar(__nccwpck_require__(3967));
 exports.ChangeContainerRepositoryCompartmentDetails = ChangeContainerRepositoryCompartmentDetails.ChangeContainerRepositoryCompartmentDetails;
+const ChangeRepositoryCompartmentDetails = __importStar(__nccwpck_require__(7231));
+exports.ChangeRepositoryCompartmentDetails = ChangeRepositoryCompartmentDetails.ChangeRepositoryCompartmentDetails;
 const ContainerConfiguration = __importStar(__nccwpck_require__(2222));
 exports.ContainerConfiguration = ContainerConfiguration.ContainerConfiguration;
 const ContainerImage = __importStar(__nccwpck_require__(8236));
@@ -14887,14 +17156,42 @@ const CreateContainerImageSignatureDetails = __importStar(__nccwpck_require__(75
 exports.CreateContainerImageSignatureDetails = CreateContainerImageSignatureDetails.CreateContainerImageSignatureDetails;
 const CreateContainerRepositoryDetails = __importStar(__nccwpck_require__(2990));
 exports.CreateContainerRepositoryDetails = CreateContainerRepositoryDetails.CreateContainerRepositoryDetails;
+const CreateRepositoryDetails = __importStar(__nccwpck_require__(7161));
+exports.CreateRepositoryDetails = CreateRepositoryDetails.CreateRepositoryDetails;
+const GenericArtifact = __importStar(__nccwpck_require__(6359));
+exports.GenericArtifact = GenericArtifact.GenericArtifact;
+const GenericArtifactCollection = __importStar(__nccwpck_require__(746));
+exports.GenericArtifactCollection = GenericArtifactCollection.GenericArtifactCollection;
+const GenericArtifactSummary = __importStar(__nccwpck_require__(2949));
+exports.GenericArtifactSummary = GenericArtifactSummary.GenericArtifactSummary;
 const RemoveContainerVersionDetails = __importStar(__nccwpck_require__(424));
 exports.RemoveContainerVersionDetails = RemoveContainerVersionDetails.RemoveContainerVersionDetails;
+const Repository = __importStar(__nccwpck_require__(8910));
+exports.Repository = Repository.Repository;
+const RepositoryCollection = __importStar(__nccwpck_require__(1048));
+exports.RepositoryCollection = RepositoryCollection.RepositoryCollection;
+const RepositorySummary = __importStar(__nccwpck_require__(8803));
+exports.RepositorySummary = RepositorySummary.RepositorySummary;
 const RestoreContainerImageDetails = __importStar(__nccwpck_require__(9470));
 exports.RestoreContainerImageDetails = RestoreContainerImageDetails.RestoreContainerImageDetails;
 const UpdateContainerConfigurationDetails = __importStar(__nccwpck_require__(8741));
 exports.UpdateContainerConfigurationDetails = UpdateContainerConfigurationDetails.UpdateContainerConfigurationDetails;
 const UpdateContainerRepositoryDetails = __importStar(__nccwpck_require__(4869));
 exports.UpdateContainerRepositoryDetails = UpdateContainerRepositoryDetails.UpdateContainerRepositoryDetails;
+const UpdateGenericArtifactByPathDetails = __importStar(__nccwpck_require__(3027));
+exports.UpdateGenericArtifactByPathDetails = UpdateGenericArtifactByPathDetails.UpdateGenericArtifactByPathDetails;
+const UpdateGenericArtifactDetails = __importStar(__nccwpck_require__(2249));
+exports.UpdateGenericArtifactDetails = UpdateGenericArtifactDetails.UpdateGenericArtifactDetails;
+const UpdateRepositoryDetails = __importStar(__nccwpck_require__(9382));
+exports.UpdateRepositoryDetails = UpdateRepositoryDetails.UpdateRepositoryDetails;
+const CreateGenericRepositoryDetails = __importStar(__nccwpck_require__(8437));
+exports.CreateGenericRepositoryDetails = CreateGenericRepositoryDetails.CreateGenericRepositoryDetails;
+const GenericRepository = __importStar(__nccwpck_require__(1198));
+exports.GenericRepository = GenericRepository.GenericRepository;
+const GenericRepositorySummary = __importStar(__nccwpck_require__(6803));
+exports.GenericRepositorySummary = GenericRepositorySummary.GenericRepositorySummary;
+const UpdateGenericRepositoryDetails = __importStar(__nccwpck_require__(2902));
+exports.UpdateGenericRepositoryDetails = UpdateGenericRepositoryDetails.UpdateGenericRepositoryDetails;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
@@ -14927,8 +17224,242 @@ var RemoveContainerVersionDetails;
         return jsonObj;
     }
     RemoveContainerVersionDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    RemoveContainerVersionDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(RemoveContainerVersionDetails = exports.RemoveContainerVersionDetails || (exports.RemoveContainerVersionDetails = {}));
 //# sourceMappingURL=remove-container-version-details.js.map
+
+/***/ }),
+
+/***/ 1048:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RepositoryCollection = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var RepositoryCollection;
+(function (RepositoryCollection) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.RepositorySummary.getJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    RepositoryCollection.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.RepositorySummary.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    RepositoryCollection.getDeserializedJsonObj = getDeserializedJsonObj;
+})(RepositoryCollection = exports.RepositoryCollection || (exports.RepositoryCollection = {}));
+//# sourceMappingURL=repository-collection.js.map
+
+/***/ }),
+
+/***/ 8803:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RepositorySummary = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var RepositorySummary;
+(function (RepositorySummary) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.GenericRepositorySummary.getJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    RepositorySummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.GenericRepositorySummary.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    RepositorySummary.getDeserializedJsonObj = getDeserializedJsonObj;
+})(RepositorySummary = exports.RepositorySummary || (exports.RepositorySummary = {}));
+//# sourceMappingURL=repository-summary.js.map
+
+/***/ }),
+
+/***/ 8910:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Repository = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var Repository;
+(function (Repository) {
+    let LifecycleState;
+    (function (LifecycleState) {
+        LifecycleState["Available"] = "AVAILABLE";
+        LifecycleState["Deleting"] = "DELETING";
+        LifecycleState["Deleted"] = "DELETED";
+        /**
+         * This value is used if a service returns a value for this enum that is not recognized by this
+         * version of the SDK.
+         */
+        LifecycleState["UnknownValue"] = "UNKNOWN_VALUE";
+    })(LifecycleState = Repository.LifecycleState || (Repository.LifecycleState = {}));
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.GenericRepository.getJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    Repository.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.GenericRepository.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    Repository.getDeserializedJsonObj = getDeserializedJsonObj;
+})(Repository = exports.Repository || (exports.Repository = {}));
+//# sourceMappingURL=repository.js.map
 
 /***/ }),
 
@@ -14960,6 +17491,11 @@ var RestoreContainerImageDetails;
         return jsonObj;
     }
     RestoreContainerImageDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    RestoreContainerImageDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(RestoreContainerImageDetails = exports.RestoreContainerImageDetails || (exports.RestoreContainerImageDetails = {}));
 //# sourceMappingURL=restore-container-image-details.js.map
 
@@ -14993,6 +17529,11 @@ var UpdateContainerConfigurationDetails;
         return jsonObj;
     }
     UpdateContainerConfigurationDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateContainerConfigurationDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateContainerConfigurationDetails = exports.UpdateContainerConfigurationDetails || (exports.UpdateContainerConfigurationDetails = {}));
 //# sourceMappingURL=update-container-configuration-details.js.map
 
@@ -15048,8 +17589,230 @@ var UpdateContainerRepositoryDetails;
         return jsonObj;
     }
     UpdateContainerRepositoryDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "readme": obj.readme
+                ? model.ContainerRepositoryReadme.getDeserializedJsonObj(obj.readme)
+                : undefined
+        });
+        return jsonObj;
+    }
+    UpdateContainerRepositoryDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateContainerRepositoryDetails = exports.UpdateContainerRepositoryDetails || (exports.UpdateContainerRepositoryDetails = {}));
 //# sourceMappingURL=update-container-repository-details.js.map
+
+/***/ }),
+
+/***/ 3027:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateGenericArtifactByPathDetails = void 0;
+var UpdateGenericArtifactByPathDetails;
+(function (UpdateGenericArtifactByPathDetails) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateGenericArtifactByPathDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateGenericArtifactByPathDetails.getDeserializedJsonObj = getDeserializedJsonObj;
+})(UpdateGenericArtifactByPathDetails = exports.UpdateGenericArtifactByPathDetails || (exports.UpdateGenericArtifactByPathDetails = {}));
+//# sourceMappingURL=update-generic-artifact-by-path-details.js.map
+
+/***/ }),
+
+/***/ 2249:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateGenericArtifactDetails = void 0;
+var UpdateGenericArtifactDetails;
+(function (UpdateGenericArtifactDetails) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateGenericArtifactDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateGenericArtifactDetails.getDeserializedJsonObj = getDeserializedJsonObj;
+})(UpdateGenericArtifactDetails = exports.UpdateGenericArtifactDetails || (exports.UpdateGenericArtifactDetails = {}));
+//# sourceMappingURL=update-generic-artifact-details.js.map
+
+/***/ }),
+
+/***/ 2902:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateGenericRepositoryDetails = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var UpdateGenericRepositoryDetails;
+(function (UpdateGenericRepositoryDetails) {
+    function getJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.UpdateRepositoryDetails.getJsonObj(obj))), {});
+        return jsonObj;
+    }
+    UpdateGenericRepositoryDetails.getJsonObj = getJsonObj;
+    UpdateGenericRepositoryDetails.repositoryType = "GENERIC";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.UpdateRepositoryDetails.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    UpdateGenericRepositoryDetails.getDeserializedJsonObj = getDeserializedJsonObj;
+})(UpdateGenericRepositoryDetails = exports.UpdateGenericRepositoryDetails || (exports.UpdateGenericRepositoryDetails = {}));
+//# sourceMappingURL=update-generic-repository-details.js.map
+
+/***/ }),
+
+/***/ 9382:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Container Images API
+ * API covering the [Registry](/iaas/Content/Registry/Concepts/registryoverview.htm) services.
+Use this API to manage resources such as container images and repositories.
+
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateRepositoryDetails = void 0;
+const model = __importStar(__nccwpck_require__(2972));
+var UpdateRepositoryDetails;
+(function (UpdateRepositoryDetails) {
+    function getJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.UpdateGenericRepositoryDetails.getJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    UpdateRepositoryDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("repositoryType" in obj && obj.repositoryType) {
+            switch (obj.repositoryType) {
+                case "GENERIC":
+                    return model.UpdateGenericRepositoryDetails.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.repositoryType);
+            }
+        }
+        return jsonObj;
+    }
+    UpdateRepositoryDetails.getDeserializedJsonObj = getDeserializedJsonObj;
+})(UpdateRepositoryDetails = exports.UpdateRepositoryDetails || (exports.UpdateRepositoryDetails = {}));
+//# sourceMappingURL=update-repository-details.js.map
 
 /***/ }),
 
@@ -15092,13 +17855,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ListContainerRepositoriesRequest = exports.ListContainerImagesRequest = exports.ListContainerImageSignaturesRequest = void 0;
+exports.ListRepositoriesRequest = exports.ListGenericArtifactsRequest = exports.ListContainerRepositoriesRequest = exports.ListContainerImagesRequest = exports.ListContainerImageSignaturesRequest = void 0;
 const ListContainerImageSignaturesRequest = __importStar(__nccwpck_require__(8388));
 exports.ListContainerImageSignaturesRequest = ListContainerImageSignaturesRequest.ListContainerImageSignaturesRequest;
 const ListContainerImagesRequest = __importStar(__nccwpck_require__(7572));
 exports.ListContainerImagesRequest = ListContainerImagesRequest.ListContainerImagesRequest;
 const ListContainerRepositoriesRequest = __importStar(__nccwpck_require__(2316));
 exports.ListContainerRepositoriesRequest = ListContainerRepositoriesRequest.ListContainerRepositoriesRequest;
+const ListGenericArtifactsRequest = __importStar(__nccwpck_require__(2010));
+exports.ListGenericArtifactsRequest = ListGenericArtifactsRequest.ListGenericArtifactsRequest;
+const ListRepositoriesRequest = __importStar(__nccwpck_require__(6387));
+exports.ListRepositoriesRequest = ListRepositoriesRequest.ListRepositoriesRequest;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
@@ -15218,6 +17985,78 @@ var ListContainerRepositoriesRequest;
 
 /***/ }),
 
+/***/ 2010:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ *
+ *
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ListGenericArtifactsRequest = void 0;
+var ListGenericArtifactsRequest;
+(function (ListGenericArtifactsRequest) {
+    let SortBy;
+    (function (SortBy) {
+        SortBy["Timecreated"] = "TIMECREATED";
+        SortBy["Displayname"] = "DISPLAYNAME";
+    })(SortBy = ListGenericArtifactsRequest.SortBy || (ListGenericArtifactsRequest.SortBy = {}));
+    let SortOrder;
+    (function (SortOrder) {
+        SortOrder["Asc"] = "ASC";
+        SortOrder["Desc"] = "DESC";
+    })(SortOrder = ListGenericArtifactsRequest.SortOrder || (ListGenericArtifactsRequest.SortOrder = {}));
+})(ListGenericArtifactsRequest = exports.ListGenericArtifactsRequest || (exports.ListGenericArtifactsRequest = {}));
+//# sourceMappingURL=list-generic-artifacts-request.js.map
+
+/***/ }),
+
+/***/ 6387:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+/**
+ *
+ *
+ * OpenAPI spec version: 20160918
+ *
+ *
+ * NOTE: This class is auto generated by OracleSDKGenerator.
+ * Do not edit the class manually.
+ *
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates.  All rights reserved.
+ * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ListRepositoriesRequest = void 0;
+var ListRepositoriesRequest;
+(function (ListRepositoriesRequest) {
+    let SortBy;
+    (function (SortBy) {
+        SortBy["Timecreated"] = "TIMECREATED";
+        SortBy["Displayname"] = "DISPLAYNAME";
+    })(SortBy = ListRepositoriesRequest.SortBy || (ListRepositoriesRequest.SortBy = {}));
+    let SortOrder;
+    (function (SortOrder) {
+        SortOrder["Asc"] = "ASC";
+        SortOrder["Desc"] = "DESC";
+    })(SortOrder = ListRepositoriesRequest.SortOrder || (ListRepositoriesRequest.SortOrder = {}));
+})(ListRepositoriesRequest = exports.ListRepositoriesRequest || (exports.ListRepositoriesRequest = {}));
+//# sourceMappingURL=list-repositories-request.js.map
+
+/***/ }),
+
 /***/ 9929:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -15274,7 +18113,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CircuitBreaker = exports.Constants = exports.MaxAttemptsTerminationStrategy = exports.FixedTimeDelayStrategy = exports.GenericRetrier = exports.LOG = exports.ResourcePrincipalAuthenticationDetailsProvider = exports.InstancePrincipalsAuthenticationDetailsProviderBuilder = exports.ConfigFileReader = exports.ConfigFileAuthenticationDetailsProvider = exports.composeResponse = exports.composeRequest = exports.genericPaginateResponses = exports.paginateResponses = exports.genericPaginateRecords = exports.paginatedRecordsWithLimit = exports.paginatedResponsesWithLimit = exports.paginateRecords = exports.genericTerminalConditionWaiter = exports.genericWaiter = exports.MaxTimeTerminationStrategy = exports.ExponentialBackoffDelayStrategy = exports.EndpointBuilder = exports.Realm = exports.Region = exports.Range = exports.ObjectSerializer = exports.convertStringToType = exports.handleErrorBody = exports.mapContainer = exports.handleErrorResponse = exports.getStringFromResponseBody = exports.DefaultRequestSigner = exports.OciError = exports.FetchHttpClient = exports.isRegionProvider = exports.SimpleAuthenticationDetailsProvider = void 0;
+exports.utils = exports.getChunk = exports.CircuitBreaker = exports.Constants = exports.NoRetryConfigurationDetails = exports.MaxAttemptsTerminationStrategy = exports.FixedTimeDelayStrategy = exports.GenericRetrier = exports.LOG = exports.ResourcePrincipalAuthenticationDetailsProvider = exports.InstancePrincipalsAuthenticationDetailsProviderBuilder = exports.ConfigFileReader = exports.ConfigFileAuthenticationDetailsProvider = exports.composeResponse = exports.composeRequest = exports.genericPaginateResponses = exports.paginateResponses = exports.genericPaginateRecords = exports.paginatedRecordsWithLimit = exports.paginatedResponsesWithLimit = exports.paginateRecords = exports.genericTerminalConditionWaiter = exports.genericWaiter = exports.MaxTimeTerminationStrategy = exports.ExponentialBackoffDelayStrategy = exports.EndpointBuilder = exports.Realm = exports.Region = exports.Range = exports.byteLength = exports.ObjectSerializer = exports.convertStringToType = exports.handleErrorBody = exports.mapContainer = exports.handleErrorResponse = exports.getStringFromResponseBody = exports.DefaultRequestSigner = exports.OciError = exports.FetchHttpClient = exports.isRegionProvider = exports.SimpleAuthenticationDetailsProvider = void 0;
 const auth = __importStar(__nccwpck_require__(8154));
 const error = __importStar(__nccwpck_require__(2956));
 const signer = __importStar(__nccwpck_require__(484));
@@ -15282,6 +18121,8 @@ const helper = __importStar(__nccwpck_require__(7621));
 const http = __importStar(__nccwpck_require__(6316));
 const serializer = __importStar(__nccwpck_require__(2043));
 const range = __importStar(__nccwpck_require__(1139));
+const utils = __importStar(__nccwpck_require__(1563));
+exports.utils = utils;
 const region_1 = __nccwpck_require__(263);
 Object.defineProperty(exports, "Region", ({ enumerable: true, get: function () { return region_1.Region; } }));
 const realm_1 = __nccwpck_require__(3755);
@@ -15290,7 +18131,7 @@ const endpoint_builder_1 = __nccwpck_require__(5373);
 Object.defineProperty(exports, "EndpointBuilder", ({ enumerable: true, get: function () { return endpoint_builder_1.EndpointBuilder; } }));
 const log_1 = __nccwpck_require__(6109);
 Object.defineProperty(exports, "LOG", ({ enumerable: true, get: function () { return log_1.LOG; } }));
-const constants_1 = __importDefault(__nccwpck_require__(8041));
+const constants_1 = __importDefault(__nccwpck_require__(1244));
 exports.Constants = constants_1.default;
 const circuit_breaker_1 = __importDefault(__nccwpck_require__(5620));
 exports.CircuitBreaker = circuit_breaker_1.default;
@@ -15303,6 +18144,7 @@ Object.defineProperty(exports, "MaxAttemptsTerminationStrategy", ({ enumerable: 
 Object.defineProperty(exports, "FixedTimeDelayStrategy", ({ enumerable: true, get: function () { return waiter_1.FixedTimeDelayStrategy; } }));
 const retrier_1 = __nccwpck_require__(4922);
 Object.defineProperty(exports, "GenericRetrier", ({ enumerable: true, get: function () { return retrier_1.GenericRetrier; } }));
+Object.defineProperty(exports, "NoRetryConfigurationDetails", ({ enumerable: true, get: function () { return retrier_1.NoRetryConfigurationDetails; } }));
 const instance_principals_authentication_detail_provider_1 = __importDefault(__nccwpck_require__(252));
 exports.InstancePrincipalsAuthenticationDetailsProviderBuilder = instance_principals_authentication_detail_provider_1.default;
 const resource_principal_authentication_details_provider_1 = __importDefault(__nccwpck_require__(5228));
@@ -15316,6 +18158,8 @@ Object.defineProperty(exports, "genericPaginateResponses", ({ enumerable: true, 
 Object.defineProperty(exports, "paginatedResponsesWithLimit", ({ enumerable: true, get: function () { return paginators_1.paginatedResponsesWithLimit; } }));
 const config_file_auth_1 = __nccwpck_require__(3054);
 Object.defineProperty(exports, "ConfigFileAuthenticationDetailsProvider", ({ enumerable: true, get: function () { return config_file_auth_1.ConfigFileAuthenticationDetailsProvider; } }));
+const chunker_1 = __importDefault(__nccwpck_require__(138));
+exports.getChunk = chunker_1.default;
 const config_file_reader_1 = __nccwpck_require__(7407);
 Object.defineProperty(exports, "ConfigFileReader", ({ enumerable: true, get: function () { return config_file_reader_1.ConfigFileReader; } }));
 const request_generator_1 = __nccwpck_require__(3719);
@@ -15333,6 +18177,7 @@ exports.mapContainer = helper.mapContainer;
 exports.handleErrorBody = helper.handleErrorBody;
 exports.convertStringToType = helper.convertStringToType;
 exports.ObjectSerializer = serializer.ObjectSerializer;
+exports.byteLength = helper.byteLength;
 exports.Range = range.Range;
 //# sourceMappingURL=index.js.map
 
@@ -16127,8 +18972,13 @@ class ConfigFileAuthenticationDetailsProvider {
         return new auth_1.SimpleAuthenticationDetailsProvider(tenantId, user, fingerprint, privateKey, passPhrase, region, undefined, undefined, profileCredentials);
     }
     getPvtKey(filePath) {
-        const key = fs_1.readFileSync(filePath, "utf8");
-        return key;
+        try {
+            const key = fs_1.readFileSync(filePath, "utf8");
+            return key;
+        }
+        catch (e) {
+            throw "Failed to read private key from file path.";
+        }
     }
     /**
      * Get the key id to sign the http request.
@@ -17181,8 +20031,289 @@ exports.ResourceDetails = ResourceDetails;
 
 /***/ }),
 
-/***/ 5620:
+/***/ 138:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const stream_1 = __nccwpck_require__(2413);
+const buffer_1 = __nccwpck_require__(4293);
+const helper_1 = __nccwpck_require__(7621);
+const ChunkBuffer_1 = __nccwpck_require__(7620);
+const ChunkStream_1 = __nccwpck_require__(1606);
+const getReadableStreamData_1 = __nccwpck_require__(6924);
+const getReadableData_1 = __nccwpck_require__(1884);
+function getChunk(data, partSize) {
+    if (data instanceof buffer_1.Buffer) {
+        return ChunkBuffer_1.ChunkBuffer(data, partSize);
+    }
+    else if (data instanceof stream_1.Readable) {
+        return ChunkStream_1.ChunkStream(data, partSize, getReadableData_1.getReadableData);
+    }
+    else if (data instanceof String || typeof data === "string" || data instanceof Uint8Array) {
+        // chunk Strings, Uint8Array.
+        return ChunkBuffer_1.ChunkBuffer(buffer_1.Buffer.from(data), partSize);
+    }
+    if (typeof data.stream === "function") {
+        // support for blob
+        let stream = data.stream();
+        if (stream.getReader) {
+            return ChunkStream_1.ChunkStream(stream, partSize, getReadableStreamData_1.getReadableStreamData);
+        }
+        else {
+            // Some fetch libraries have blob's .stream implemented as NodeJS's readable
+            return ChunkStream_1.ChunkStream(stream, partSize, getReadableData_1.getReadableData);
+        }
+    }
+    else if (helper_1.isReadableStream(data)) {
+        // NodeJS run-time does not know what ReadableStream is, isReadableStream helps detect if stream is a ReadableStream
+        return ChunkStream_1.ChunkStream(data, partSize, getReadableStreamData_1.getReadableStreamData);
+    }
+    else {
+        throw new Error("Body Data is unsupported format, expected data to be one of: string | Uint8Array | Buffer | Readable | ReadableStream | Blob;.");
+    }
+}
+exports.default = getChunk;
+//# sourceMappingURL=chunker.js.map
+
+/***/ }),
+
+/***/ 7620:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
+var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var g = generator.apply(thisArg, _arguments || []), i, q = [];
+    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
+    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
+    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
+    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
+    function fulfill(value) { resume("next", value); }
+    function reject(value) { resume("throw", value); }
+    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChunkBuffer = void 0;
+const crypto_1 = __nccwpck_require__(6417);
+const helper_1 = __nccwpck_require__(7621);
+function ChunkBuffer(data, partSize) {
+    return __asyncGenerator(this, arguments, function* ChunkBuffer_1() {
+        let partNumber = 1;
+        let startByte = 0;
+        let endByte = partSize;
+        let content;
+        let md5Hash;
+        while (endByte < data.length) {
+            content = data.slice(startByte, endByte);
+            md5Hash = crypto_1.createHash("md5");
+            md5Hash.update(content);
+            yield yield __await({
+                size: helper_1.byteLength(content),
+                data: content,
+                md5Hash: md5Hash.digest("base64")
+            });
+            partNumber += 1;
+            startByte = endByte;
+            endByte = startByte + partSize;
+        }
+        content = data.slice(startByte);
+        md5Hash = crypto_1.createHash("md5");
+        md5Hash.update(content);
+        yield yield __await({
+            size: helper_1.byteLength(content),
+            data: content,
+            md5Hash: md5Hash.digest("base64")
+        });
+    });
+}
+exports.ChunkBuffer = ChunkBuffer;
+//# sourceMappingURL=ChunkBuffer.js.map
+
+/***/ }),
+
+/***/ 1606:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
+var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
+var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var g = generator.apply(thisArg, _arguments || []), i, q = [];
+    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
+    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
+    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
+    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
+    function fulfill(value) { resume("next", value); }
+    function reject(value) { resume("throw", value); }
+    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChunkStream = void 0;
+const buffer_1 = __nccwpck_require__(4293);
+const crypto_1 = __nccwpck_require__(6417);
+const helper_1 = __nccwpck_require__(7621);
+function ChunkStream(data, partSize, getNextData) {
+    return __asyncGenerator(this, arguments, function* ChunkStream_1() {
+        var e_1, _a;
+        const currentBuffer = { chunks: [], length: 0 };
+        let content;
+        let size;
+        let md5Hash;
+        try {
+            for (var _b = __asyncValues(getNextData(data)), _c; _c = yield __await(_b.next()), !_c.done;) {
+                const datum = _c.value;
+                currentBuffer.chunks.push(datum);
+                currentBuffer.length += datum.length;
+                while (currentBuffer.length >= partSize) {
+                    const dataChunk = currentBuffer.chunks.length > 1
+                        ? buffer_1.Buffer.concat(currentBuffer.chunks)
+                        : currentBuffer.chunks[0];
+                    content = dataChunk.slice(0, partSize);
+                    md5Hash = crypto_1.createHash("md5");
+                    md5Hash.update(content);
+                    size = helper_1.byteLength(content);
+                    yield yield __await({
+                        size: size,
+                        data: content,
+                        md5Hash: md5Hash.digest("base64")
+                    });
+                    // Reset buffer.
+                    currentBuffer.chunks = [dataChunk.slice(partSize)];
+                    currentBuffer.length = currentBuffer.chunks[0].length;
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) yield __await(_a.call(_b));
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        content = buffer_1.Buffer.concat(currentBuffer.chunks);
+        size = helper_1.byteLength(content);
+        md5Hash = crypto_1.createHash("md5");
+        md5Hash.update(content);
+        yield yield __await({
+            size: size,
+            data: content,
+            md5Hash: md5Hash.digest("base64")
+        });
+    });
+}
+exports.ChunkStream = ChunkStream;
+//# sourceMappingURL=ChunkStream.js.map
+
+/***/ }),
+
+/***/ 1884:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
+var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
+var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var g = generator.apply(thisArg, _arguments || []), i, q = [];
+    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
+    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
+    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
+    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
+    function fulfill(value) { resume("next", value); }
+    function reject(value) { resume("throw", value); }
+    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getReadableData = void 0;
+const buffer_1 = __nccwpck_require__(4293);
+function getReadableData(data) {
+    return __asyncGenerator(this, arguments, function* getReadableData_1() {
+        var e_1, _a;
+        try {
+            for (var data_1 = __asyncValues(data), data_1_1; data_1_1 = yield __await(data_1.next()), !data_1_1.done;) {
+                const chunk = data_1_1.value;
+                yield yield __await(buffer_1.Buffer.from(chunk));
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (data_1_1 && !data_1_1.done && (_a = data_1.return)) yield __await(_a.call(data_1));
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+    });
+}
+exports.getReadableData = getReadableData;
+//# sourceMappingURL=getReadableData.js.map
+
+/***/ }),
+
+/***/ 6924:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
+var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var g = generator.apply(thisArg, _arguments || []), i, q = [];
+    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
+    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
+    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
+    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
+    function fulfill(value) { resume("next", value); }
+    function reject(value) { resume("throw", value); }
+    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getReadableStreamData = void 0;
+const buffer_1 = __nccwpck_require__(4293);
+function getReadableStreamData(data) {
+    return __asyncGenerator(this, arguments, function* getReadableStreamData_1() {
+        const reader = data.getReader();
+        try {
+            while (true) {
+                const { done, value } = yield __await(reader.read());
+                if (done)
+                    return yield __await(void 0);
+                yield yield __await(buffer_1.Buffer.from(value));
+            }
+        }
+        catch (e) {
+            throw e;
+        }
+        finally {
+            reader.releaseLock();
+        }
+    });
+}
+exports.getReadableStreamData = getReadableStreamData;
+//# sourceMappingURL=getReadableStreamData.js.map
+
+/***/ }),
+
+/***/ 5620:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -17190,28 +20321,94 @@ exports.ResourceDetails = ResourceDetails;
  * Copyright (c) 2020, 2021 Oracle and/or its affiliates.  All rights reserved.
  * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
  */
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const helper_1 = __nccwpck_require__(7621);
+const retrier_1 = __nccwpck_require__(4922);
 const Breaker = __nccwpck_require__(3857);
+function FetchWrapper(req) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield fetch(req);
+                if (response.status && response.status >= 200 && response.status <= 299) {
+                    resolve({ response });
+                }
+                else {
+                    const responseClone = response.clone();
+                    const errBody = yield helper_1.handleErrorBody(responseClone);
+                    const errorObject = helper_1.handleErrorResponse(responseClone, errBody);
+                    reject({
+                        response,
+                        errorObject
+                    });
+                }
+            }
+            catch (e) {
+                // If we get here, that means response was a client side error
+                reject(e);
+            }
+        }));
+    });
+}
+function defaultErrorFilterFunction(e) {
+    console.log("error from defaultErrorFunction: ", e);
+    // Only consider client side errors or retry-able server errors
+    if (e.code || (e.errorObject && retrier_1.DefaultRetryCondition.shouldBeRetried(e.errorObject))) {
+        return false;
+    }
+    return true;
+}
 class CircuitBreaker {
     constructor(options) {
         this.circuit = null;
+        this.noCircuit = false;
+        if (options === null || options === void 0 ? void 0 : options.disableClientCircuitBreaker) {
+            this.noCircuit = true;
+            return;
+        }
         this.circuit = options
-            ? new Breaker(fetch, options)
-            : new Breaker(fetch, {
-                timeout: 10000,
-                errorThresholdPercentage: 50,
-                resetTimeout: 30000 // After 30 seconds, try again.
-            });
+            ? new Breaker(FetchWrapper, options)
+            : new Breaker(FetchWrapper, CircuitBreaker.DefaultConfiguration);
+        // Add emitters
+        this.circuit.on("open", () => {
+            console.log("circuit breaker is now in OPEN state");
+        });
+        this.circuit.on("halfOpen", () => {
+            console.log("circuit breaker is now in HALF OPEN state");
+        });
+        this.circuit.on("close", () => {
+            console.log("circuit breaker is now in CLOSE state");
+        });
+    }
+    static get defaultConfiguration() {
+        return CircuitBreaker.DefaultConfiguration;
+    }
+    static set defaultConfiguration(circuitBreakerConfig) {
+        CircuitBreaker.DefaultConfiguration = Object.assign(Object.assign({}, CircuitBreaker.DefaultConfiguration), circuitBreakerConfig);
     }
 }
 exports.default = CircuitBreaker;
-CircuitBreaker.enableDefault = false;
-CircuitBreaker.defaultCircuit = new Breaker(fetch, {
+CircuitBreaker.EnableGlobalCircuitBreaker = true; // Configuration to turn on/off the global circuit breaker.
+CircuitBreaker.EnableDefaultCircuitBreaker = process.env.OCI_SDK_DEFAULT_CIRCUITBREAKER_ENABLED;
+CircuitBreaker.DefaultConfiguration = {
     timeout: 10000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000 // After 30 seconds, try again.
-});
-CircuitBreaker.internalCircuit = new Breaker(fetch, {
+    errorThresholdPercentage: 80,
+    resetTimeout: 30000,
+    rollingCountTimeout: 120000,
+    rollingCountBuckets: 120,
+    volumeThreshold: 10,
+    errorFilter: defaultErrorFilterFunction
+};
+CircuitBreaker.internalCircuit = new Breaker(FetchWrapper, {
     timeout: 10000,
     errorThresholdPercentage: 50,
     resetTimeout: 30000 // After 30 seconds, try again.
@@ -17399,7 +20596,7 @@ exports.ConfigAccumulator = ConfigAccumulator;
 
 /***/ }),
 
-/***/ 8041:
+/***/ 1244:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -17409,9 +20606,15 @@ exports.ConfigAccumulator = ConfigAccumulator;
  * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BooleanString = void 0;
 const Constants = {
     APPLICATION_JSON: "application/json"
 };
+var BooleanString;
+(function (BooleanString) {
+    BooleanString["TRUE"] = "true";
+    BooleanString["FALSE"] = "false";
+})(BooleanString = exports.BooleanString || (exports.BooleanString = {}));
 exports.default = Constants;
 //# sourceMappingURL=constants.js.map
 
@@ -17570,19 +20773,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getStringFromRequestBody = exports.formatDateToRFC3339 = exports.autoDetectContentLengthAndReadBody = exports.addAdditionalHeaders = exports.getSignerAndReqBody = exports.readDataFromReadable = exports.readStringFromReadable = exports.getStringFromResponseBody = exports.convertStringToType = exports.handleErrorBody = exports.handleErrorResponse = exports.mapContainer = void 0;
-/**
- * Copyright (c) 2020, 2021 Oracle and/or its affiliates.  All rights reserved.
- * This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 as shown at https://oss.oracle.com/licenses/upl or Apache License 2.0 as shown at http://www.apache.org/licenses/LICENSE-2.0. You may choose either license.
- */
-const fs_1 = __nccwpck_require__(5747);
+exports.byteLength = exports.isReadableStream = exports.getStringFromRequestBody = exports.formatDateToRFC3339 = exports.autoDetectContentLengthAndReadBody = exports.addAdditionalHeaders = exports.getSignerAndReqBody = exports.readStringFromReadable = exports.getStringFromResponseBody = exports.convertStringToType = exports.handleErrorBody = exports.handleErrorResponse = exports.mapContainer = void 0;
 const error_1 = __nccwpck_require__(2956);
 const range_1 = __nccwpck_require__(1139);
 const stream_1 = __nccwpck_require__(2413);
 const headers_1 = __nccwpck_require__(3649);
-const retry_token_header_1 = __nccwpck_require__(9502);
 const utils_1 = __nccwpck_require__(1563);
+const chunker_1 = __importDefault(__nccwpck_require__(138));
 function mapContainer(obj, getJsonObj) {
     const constructedObj = {};
     for (let key in obj) {
@@ -17598,10 +20799,14 @@ function handleErrorResponse(response, body) {
         return new error_1.OciError(statusCode, body.code, body.message, requestId);
     }
     else if (typeof body == "string" && body.length > 0) {
-        return new error_1.OciError(statusCode, "unknown code", body, requestId);
+        return new error_1.OciError(statusCode, "None", body, requestId);
+    }
+    else if (response.statusText && response.statusText.length > 0) {
+        // There is no body text but statusText exists
+        return new error_1.OciError(statusCode, "None", response.statusText, requestId);
     }
     else {
-        return new error_1.OciError(statusCode, "unknown code", "unknown reason.", requestId);
+        return new error_1.OciError(statusCode, "None", "unknown reason.", requestId);
     }
 }
 exports.handleErrorResponse = handleErrorResponse;
@@ -17613,7 +20818,7 @@ function handleErrorBody(response) {
             data = JSON.parse(data);
         }
         catch (err) {
-            console.log("Cannot parse data into JSON");
+            return data;
         }
         return data;
     });
@@ -17687,36 +20892,6 @@ function readStringFromReadable(readable) {
     });
 }
 exports.readStringFromReadable = readStringFromReadable;
-// read data from Readable asynchronously, return a Buffer content of it
-function readDataFromReadable(readable) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let contentBuffer = [];
-        let size = 0;
-        const MEMIBYTES = 1024 * 1024;
-        const sizeLimit = 2000 * MEMIBYTES;
-        return new Promise((resolve, reject) => {
-            readable.on("end", () => {
-                const result = Buffer.concat(contentBuffer);
-                resolve(result);
-            });
-            readable.on("readable", function () {
-                let data;
-                while ((data = readable.read())) {
-                    if (size > sizeLimit) {
-                        throw Error("Tried to read stream but content length is greater than 2GB.");
-                    }
-                    contentBuffer.push(data);
-                    size += data.length;
-                }
-            });
-            readable.on("error", err => {
-                // if error happened, it will be catched at http signer global error handling
-                reject(err);
-            });
-        });
-    });
-}
-exports.readDataFromReadable = readDataFromReadable;
 // read string from fetch ReadbaleString asynchronously, return a string content of it
 // export async function readStringFromFetchReadableStream(readable: ReadableStream): Promise<string> {
 //   let contentBuffer: Array<string> = [];
@@ -17798,7 +20973,6 @@ exports.getSignerAndReqBody = getSignerAndReqBody;
 function addAdditionalHeaders(headers, params) {
     headers_1.addOpcRequestId(headers);
     headers_1.addUserAgent(headers);
-    retry_token_header_1.addRetryToken(headers);
 }
 exports.addAdditionalHeaders = addAdditionalHeaders;
 function autoDetectContentLengthAndReadBody(headers, params) {
@@ -17806,9 +20980,10 @@ function autoDetectContentLengthAndReadBody(headers, params) {
         // Auto Detect content-length if needed, also read binary content if stream length cannot be determined.
         const reqHeaders = params.headerParams;
         if (reqHeaders) {
-            const shouldCalculateContentLength = ("content-length" in reqHeaders && reqHeaders["content-length"] === undefined) ||
-                ("Content-Length" in reqHeaders && reqHeaders["Content-Length"] === undefined);
-            if (shouldCalculateContentLength) {
+            const shouldReadBodyAndCalculateContentLength = ("content-length" in reqHeaders && reqHeaders["content-length"] === undefined) ||
+                ("Content-Length" in reqHeaders && reqHeaders["Content-Length"] === undefined) ||
+                params.backupBinaryBody;
+            if (shouldReadBodyAndCalculateContentLength) {
                 const { body, contentLength } = yield calculateContentLengthAndBodyContent(params.bodyContent);
                 headers.append("content-length", String(contentLength));
                 return body;
@@ -17820,36 +20995,12 @@ exports.autoDetectContentLengthAndReadBody = autoDetectContentLengthAndReadBody;
 // Helper method to auto detect content-length if not given.
 function calculateContentLengthAndBodyContent(body) {
     return __awaiter(this, void 0, void 0, function* () {
-        let start = body.start || 0;
-        let end = body.end || 0;
-        const bodyType = typeof body;
-        let contentLength;
-        let content = body;
         try {
-            if (bodyType == "object") {
-                const path = body.path;
-                if (path && body.end === Infinity) {
-                    // If body.end is not defined, we can check if there is a fileLocation path
-                    end = fs_1.statSync(path).size;
-                    body["_readableState"].highWaterMark = end;
-                    contentLength = end - start;
-                }
-                else if (!isNaN(body.end) && body.end != Infinity) {
-                    end = body.end + 1;
-                    // Check if the end is greater than the highWaterMark, if so, set highWaterMark as end.
-                    body["_readableState"].highWaterMark =
-                        body.readableHighWaterMark < end ? end : body.readableHighWaterMark;
-                    contentLength = end - start;
-                }
-                else {
-                    // If there is no file path to the stream then we need to read the content of stream
-                    content = yield readDataFromReadable(body);
-                    contentLength = Buffer.byteLength(content, "utf8");
-                }
-                return { body: content, contentLength: contentLength };
-            }
-            // bodyType must be a string.
-            return { body, contentLength: body.length };
+            const dataFeeder = chunker_1.default(body, Number.MAX_SAFE_INTEGER);
+            const dataPart = (yield dataFeeder.next()).value;
+            const content = dataPart.data;
+            const contentLength = dataPart.size;
+            return { body: content, contentLength };
         }
         catch (e) {
             throw Error("SDK could not calculate contentLength from the request stream, please add contentLength and try again.");
@@ -17896,6 +21047,31 @@ function getStringFromRequestBody(body) {
     });
 }
 exports.getStringFromRequestBody = getStringFromRequestBody;
+function isReadableStream(body) {
+    // Check if the body object contains all property of a ReadableStream
+    if (body.cancel && body.getReader && body.pipeThrough && body.pipeTo && body.tee) {
+        return true;
+    }
+    return false;
+}
+exports.isReadableStream = isReadableStream;
+function byteLength(input) {
+    if (input === null || input === undefined)
+        return 0;
+    if (typeof input === "string")
+        input = Buffer.from(input);
+    if (typeof input.byteLength === "number") {
+        return input.byteLength;
+    }
+    else if (typeof input.length === "number") {
+        return input.length;
+    }
+    else if (typeof input.size === "number") {
+        return input.size;
+    }
+    return undefined;
+}
+exports.byteLength = byteLength;
 //# sourceMappingURL=helper.js.map
 
 /***/ }),
@@ -17937,16 +21113,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FetchHttpClient = void 0;
 const promise = __importStar(__nccwpck_require__(8878));
 __nccwpck_require__(2340);
 const helper_1 = __nccwpck_require__(7621);
 const Breaker = __nccwpck_require__(3857);
-const circuit_breaker_1 = __importDefault(__nccwpck_require__(5620));
 promise.polyfill();
 class FetchHttpClient {
     constructor(signer, circuitBreaker) {
@@ -17975,14 +21147,21 @@ class FetchHttpClient {
                 body: body.requestBody
             });
             if (this.circuitBreaker) {
-                // The circuitBreaker library have .fire return as any, we need to cast it to a Promise<Response> to be consistent with
-                // a fetch response type.
-                return this.circuitBreaker.fire(request);
-            }
-            else if (circuit_breaker_1.default.enableDefault) {
-                // else if we opt'd to use a default circuit breaker, an http call by default
-                // will use the default circuit breaker to make the call
-                return circuit_breaker_1.default.defaultCircuit.fire(request);
+                return this.circuitBreaker
+                    .fire(request)
+                    .then((e) => {
+                    return e.response ? e.response : e;
+                })
+                    .catch((e) => {
+                    if (e.response) {
+                        // If error contains response field, it is an actual server error, return it.
+                        return e.response;
+                    }
+                    else {
+                        // These are client side error. Throw exception.
+                        throw e;
+                    }
+                });
             }
             else {
                 return fetch(new Request(req.uri, {
@@ -18066,7 +21245,24 @@ var ObjectSerializer;
         return JSON.stringify(data);
     }
     ObjectSerializer.serialize = serialize;
-    function deserialize(data, type) {
+    function deserialize(data, type, bodyModel) {
+        if (typeof bodyModel === "object") {
+            if (isList(type)) {
+                return data.map((item) => {
+                    return bodyModel.getDeserializedJsonObj(item);
+                });
+            }
+            else if (isMap(type)) {
+                const obj = {};
+                Object.keys(data).forEach((key) => {
+                    obj[key] = bodyModel.getDeserializedJsonObj(data[key]);
+                });
+                return obj;
+            }
+            else {
+                return bodyModel.getDeserializedJsonObj(data);
+            }
+        }
         return data;
     }
     ObjectSerializer.deserialize = deserialize;
@@ -18417,15 +21613,45 @@ class Region {
     constructor(regionId, realm, regionCode) {
         this._realm = realm;
         this._regionId = regionId;
-        Region.KNOWN_REGIONS.set(regionId, this);
         if (regionCode)
-            Region.REGIONS_SHORT_NAMES[regionCode] = regionId;
+            this._regionCode = regionCode;
+        Region.KNOWN_REGIONS.set(regionId, this);
     }
     get realm() {
         return this._realm;
     }
     get regionId() {
         return this._regionId;
+    }
+    get regionCode() {
+        return this._regionCode;
+    }
+    /**
+     * Return all known Regions in this version of the SDK, except possibly the region returned by IMDS (Instance Metadata
+     * Service, only available on OCI instances), since IMDS is not automatically contacted by this method.
+     *
+     * To ensure that this method also returns the region provided by IMDS, call {@link Region#enableInstanceMetadata()}
+     * explicitly before calling {@link Region#values()}.
+     *
+     */
+    static values() {
+        if (!Region.hasCalledForImds && !Region.hasWarnedAboutValuesWithoutInstanceMetadataService) {
+            console.log("Call to Regions.values() without having contacted IMDS (Instance Metadata Service, only available on OCI instances); if you do need the region from IMDS, call Region.enableInstanceMetadata() before calling Region.values()");
+            Region.hasWarnedAboutValuesWithoutInstanceMetadataService = true;
+        }
+        Region.registerAllRegions();
+        return Array.from(this.KNOWN_REGIONS.values());
+    }
+    /**
+     *  Register all regions and sets status
+     */
+    static registerAllRegions() {
+        if (!Region.hasUsedConfigFile) {
+            Region.addRegionsFromConfigFile();
+        }
+        if (!Region.hasUsedEnvVar) {
+            Region.addRegionFromEnvVar();
+        }
     }
     static fromRegionId(regionId) {
         /*
@@ -18557,62 +21783,36 @@ class Region {
      */
     static getRegionIdFromShortCode(regionStr) {
         regionStr = regionStr.toLocaleLowerCase();
+        let region = Region.values().find(r => r.regionCode === regionStr);
+        if (region) {
+            return region.regionId;
+        }
         // If region short code is not found in the SDK, add regions from the regions config file
-        let foundRegionId = Region.REGIONS_SHORT_NAMES[regionStr];
-        if (!foundRegionId) {
-            Region.addRegionsFromConfigFile();
-            foundRegionId = Region.REGIONS_SHORT_NAMES[regionStr];
+        Region.addRegionsFromConfigFile();
+        region = Region.values().find(r => r.regionCode === regionStr);
+        if (region) {
+            return region.regionId;
         }
         // else add region from environment variable, and then check for short code
-        if (!foundRegionId) {
-            Region.addRegionFromEnvVar();
-            foundRegionId = Region.REGIONS_SHORT_NAMES[regionStr];
+        region = Region.values().find(r => r.regionCode === regionStr);
+        if (region) {
+            return region.regionId;
         }
         // else add region from IMDS if it has been opted in, and then check for short code
-        if (!foundRegionId && Region.hasCalledForImds) {
-            Region.addRegionFromImds();
-            foundRegionId = Region.REGIONS_SHORT_NAMES[regionStr];
+        Region.addRegionFromImds();
+        region = Region.values().find(r => r.regionCode === regionStr);
+        if (region) {
+            return region.regionId;
         }
-        return foundRegionId ? foundRegionId : regionStr;
+        return regionStr;
     }
 }
 exports.Region = Region;
-Region.REGIONS_SHORT_NAMES = {
-    "phx": "us-phoenix-1",
-    "iad": "us-ashburn-1",
-    "fra": "eu-frankfurt-1",
-    "lhr": "uk-london-1",
-    "yyz": "ca-toronto-1",
-    "gru": "sa-saopaulo-1",
-    "ams": "eu-amsterdam-1",
-    "jed": "me-jeddah-1",
-    "kix": "ap-osaka-1",
-    "cwl": "uk-cardiff-1",
-    "ltn": "uk-gov-london-1",
-    "nrt": "ap-tokyo-1",
-    "icn": "ap-seoul-1",
-    "hyd": "ap-hyderabad-1",
-    "bom": "ap-mumbai-1",
-    "yny": "ap-chuncheon-1",
-    "syd": "ap-sydney-1",
-    "mel": "ap-melbourne-1",
-    "yul": "ca-montreal-1",
-    "zrh": "eu-zurich-1",
-    "scl": "sa-santiago-1",
-    "lfi": "us-langley-1",
-    "luf": "us-luke-1",
-    "ric": "us-gov-ashburn-1",
-    "pia": "us-gov-chicago-1",
-    "tus": "us-gov-phoenix-1",
-    "sjc": "us-sanjose-1",
-    "brs": "uk-gov-cardiff-1",
-    "nja": "ap-chiyoda-1",
-    "dxb": "me-dubai-1"
-};
 Region.KNOWN_REGIONS = new Map();
 Region.hasCalledForImds = false;
 Region.hasUsedConfigFile = false;
 Region.hasUsedEnvVar = false;
+Region.hasWarnedAboutValuesWithoutInstanceMetadataService = false;
 Region.REGIONS_CONFIG_FILE_PATH = "~/.oci/regions-config.json";
 Region.OCI_REGION_METADATA_ENV_VAR = "OCI_REGION_METADATA";
 Region.IMDS_BASE_URL = "http://169.254.169.254/opc/v2/";
@@ -18621,40 +21821,42 @@ Region.AUTHORIZATION = "Authorization";
 Region.CONTENT_TYPE_HEADER = "Content-Type";
 Region.CONTENT_TYPE_HEADER_VALUE = "application/json";
 // OC1
-Region.AP_CHUNCHEON_1 = Region.register("ap-chuncheon-1", realm_1.Realm.OC1);
-Region.AP_MUMBAI_1 = Region.register("ap-mumbai-1", realm_1.Realm.OC1);
-Region.AP_HYDERABAD_1 = Region.register("ap-hyderabad-1", realm_1.Realm.OC1);
-Region.AP_SEOUL_1 = Region.register("ap-seoul-1", realm_1.Realm.OC1);
-Region.AP_SYDNEY_1 = Region.register("ap-sydney-1", realm_1.Realm.OC1);
-Region.AP_MELBOURNE_1 = Region.register("ap-melbourne-1", realm_1.Realm.OC1);
-Region.AP_OSAKA_1 = Region.register("ap-osaka-1", realm_1.Realm.OC1);
-Region.AP_TOKYO_1 = Region.register("ap-tokyo-1", realm_1.Realm.OC1);
-Region.CA_MONTREAL_1 = Region.register("ca-montreal-1", realm_1.Realm.OC1);
-Region.CA_TORONTO_1 = Region.register("ca-toronto-1", realm_1.Realm.OC1);
-Region.EU_FRANKFURT_1 = Region.register("eu-frankfurt-1", realm_1.Realm.OC1);
-Region.EU_ZURICH_1 = Region.register("eu-zurich-1", realm_1.Realm.OC1);
-Region.SA_SAOPAULO_1 = Region.register("sa-saopaulo-1", realm_1.Realm.OC1);
-Region.UK_CARDIFF_1 = Region.register("uk-cardiff-1", realm_1.Realm.OC1);
-Region.UK_LONDON_1 = Region.register("uk-london-1", realm_1.Realm.OC1);
-Region.US_ASHBURN_1 = Region.register("us-ashburn-1", realm_1.Realm.OC1);
-Region.US_PHOENIX_1 = Region.register("us-phoenix-1", realm_1.Realm.OC1);
-Region.EU_AMSTERDAM_1 = Region.register("eu-amsterdam-1", realm_1.Realm.OC1);
-Region.ME_JEDDAH_1 = Region.register("me-jeddah-1", realm_1.Realm.OC1);
-Region.US_SANJOSE_1 = Region.register("us-sanjose-1", realm_1.Realm.OC1);
-Region.ME_DUBAI_1 = Region.register("me-dubai-1", realm_1.Realm.OC1);
-Region.SA_SANTIAGO_1 = Region.register("sa-santiago-1", realm_1.Realm.OC1);
+Region.AP_CHUNCHEON_1 = Region.register("ap-chuncheon-1", realm_1.Realm.OC1, "yny");
+Region.AP_MUMBAI_1 = Region.register("ap-mumbai-1", realm_1.Realm.OC1, "bom");
+Region.AP_HYDERABAD_1 = Region.register("ap-hyderabad-1", realm_1.Realm.OC1, "hyd");
+Region.AP_SEOUL_1 = Region.register("ap-seoul-1", realm_1.Realm.OC1, "icn");
+Region.AP_SYDNEY_1 = Region.register("ap-sydney-1", realm_1.Realm.OC1, "syd");
+Region.AP_MELBOURNE_1 = Region.register("ap-melbourne-1", realm_1.Realm.OC1, "mel");
+Region.AP_OSAKA_1 = Region.register("ap-osaka-1", realm_1.Realm.OC1, "kix");
+Region.AP_TOKYO_1 = Region.register("ap-tokyo-1", realm_1.Realm.OC1, "nrt");
+Region.CA_MONTREAL_1 = Region.register("ca-montreal-1", realm_1.Realm.OC1, "yul");
+Region.CA_TORONTO_1 = Region.register("ca-toronto-1", realm_1.Realm.OC1, "yyz");
+Region.EU_FRANKFURT_1 = Region.register("eu-frankfurt-1", realm_1.Realm.OC1, "fra");
+Region.EU_ZURICH_1 = Region.register("eu-zurich-1", realm_1.Realm.OC1, "zrh");
+Region.SA_SAOPAULO_1 = Region.register("sa-saopaulo-1", realm_1.Realm.OC1, "gru");
+Region.UK_CARDIFF_1 = Region.register("uk-cardiff-1", realm_1.Realm.OC1, "cwl");
+Region.UK_LONDON_1 = Region.register("uk-london-1", realm_1.Realm.OC1, "lhr");
+Region.US_ASHBURN_1 = Region.register("us-ashburn-1", realm_1.Realm.OC1, "iad");
+Region.US_PHOENIX_1 = Region.register("us-phoenix-1", realm_1.Realm.OC1, "phx");
+Region.EU_AMSTERDAM_1 = Region.register("eu-amsterdam-1", realm_1.Realm.OC1, "ams");
+Region.ME_JEDDAH_1 = Region.register("me-jeddah-1", realm_1.Realm.OC1, "jed");
+Region.US_SANJOSE_1 = Region.register("us-sanjose-1", realm_1.Realm.OC1, "sjc");
+Region.ME_DUBAI_1 = Region.register("me-dubai-1", realm_1.Realm.OC1, "dxb");
+Region.SA_SANTIAGO_1 = Region.register("sa-santiago-1", realm_1.Realm.OC1, "scl");
+Region.SA_VINHEDO_1 = Region.register("sa-vinhedo-1", realm_1.Realm.OC1, "vcp");
 // OC2
-Region.US_LANGLEY_1 = Region.register("us-langley-1", realm_1.Realm.OC2);
-Region.US_LUKE_1 = Region.register("us-luke-1", realm_1.Realm.OC2);
+Region.US_LANGLEY_1 = Region.register("us-langley-1", realm_1.Realm.OC2, "lfi");
+Region.US_LUKE_1 = Region.register("us-luke-1", realm_1.Realm.OC2, "luf");
 // OC3
-Region.US_GOV_ASHBURN_1 = Region.register("us-gov-ashburn-1", realm_1.Realm.OC3);
-Region.US_GOV_CHICAGO_1 = Region.register("us-gov-chicago-1", realm_1.Realm.OC3);
-Region.US_GOV_PHOENIX_1 = Region.register("us-gov-phoenix-1", realm_1.Realm.OC3);
+Region.US_GOV_ASHBURN_1 = Region.register("us-gov-ashburn-1", realm_1.Realm.OC3, "ric");
+Region.US_GOV_CHICAGO_1 = Region.register("us-gov-chicago-1", realm_1.Realm.OC3, "pia");
+Region.US_GOV_PHOENIX_1 = Region.register("us-gov-phoenix-1", realm_1.Realm.OC3, "tus");
 // OC4
-Region.UK_GOV_LONDON_1 = Region.register("uk-gov-london-1", realm_1.Realm.OC4);
-Region.UK_GOV_CARDIFF_1 = Region.register("uk-gov-cardiff-1", realm_1.Realm.OC4);
+Region.UK_GOV_LONDON_1 = Region.register("uk-gov-london-1", realm_1.Realm.OC4, "ltn");
+Region.UK_GOV_CARDIFF_1 = Region.register("uk-gov-cardiff-1", realm_1.Realm.OC4, "brs");
 // OC8
-Region.AP_CHIYODA_1 = Region.register("ap-chiyoda-1", realm_1.Realm.OC8);
+Region.AP_CHIYODA_1 = Region.register("ap-chiyoda-1", realm_1.Realm.OC8, "nja");
+Region.AP_IBARAKI_1 = Region.register("ap-ibaraki-1", realm_1.Realm.OC8, "ukb");
 //# sourceMappingURL=region.js.map
 
 /***/ }),
@@ -18680,6 +21882,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.composeRequest = void 0;
 const helper_1 = __nccwpck_require__(7621);
+const retry_token_header_1 = __nccwpck_require__(9502);
 /*
  * Composes and Signs an SDKRequest
  * @param RequestParams to create a request
@@ -18689,7 +21892,7 @@ function composeRequest(params) {
         const headers = computeHeaders(params);
         const uri = computeUri(params);
         let body = params.bodyContent;
-        // If body exists, lets check if we need to calculate content length
+        // If body exists, check if content-length exists and check if user wants to back up binary request body
         if (body) {
             const content = yield helper_1.autoDetectContentLengthAndReadBody(headers, params);
             body = content ? content : body;
@@ -18737,6 +21940,9 @@ function computeHeaders(params) {
             }
         }
     }
+    if (params.headerParams && retry_token_header_1.OPC_RETRY_TOKEN_HEADER in params.headerParams) {
+        retry_token_header_1.addRetryToken(headers);
+    }
     helper_1.addAdditionalHeaders(headers, params);
     return headers;
 }
@@ -18746,6 +21952,10 @@ function stringify(queryParams) {
         qs = Object.keys(queryParams)
             .map(function (key) {
             let value = queryParams[key];
+            if (Array.isArray(value)) {
+                let formatter = encoderforArrayFormat();
+                return value.reduce(formatter(key), []).join("&");
+            }
             // Format Date Object to RFC3339 timestamp string.
             if (Object.prototype.toString.call(value) === "[object Date]" && value instanceof Date) {
                 return key + "=" + helper_1.formatDateToRFC3339(value);
@@ -18758,6 +21968,14 @@ function stringify(queryParams) {
             .join("&");
     }
     return qs;
+}
+function encoderforArrayFormat() {
+    return (key) => (result, value) => {
+        if (value === undefined || value === null || value === "") {
+            return result;
+        }
+        return [...result, [key, "=", value].join("")];
+    };
 }
 //# sourceMappingURL=request-generator.js.map
 
@@ -18784,7 +22002,7 @@ function composeResponse(params) {
     const response = params.responseObject;
     let content = params.body;
     if (content) {
-        const bodyContent = object_serializer_1.ObjectSerializer.deserialize(content, params.bodyModel);
+        const bodyContent = object_serializer_1.ObjectSerializer.deserialize(content, params.type, params.bodyModel);
         const key = params.bodyKey;
         Object.assign(response, { [key]: bodyContent });
     }
@@ -18826,52 +22044,63 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GenericRetrier = void 0;
+exports.GenericRetrier = exports.NoRetryConfigurationDetails = exports.DefaultRetryCondition = void 0;
 const waiter_1 = __nccwpck_require__(779);
 const helper_1 = __nccwpck_require__(7621);
 const __1 = __nccwpck_require__(5049);
 class DefaultRetryCondition {
     static shouldBeRetried(error) {
-        return (error.statusCode >= 500 ||
+        return (error.statusCode === 500 ||
+            error.statusCode === 502 ||
+            error.statusCode === 503 ||
+            error.statusCode === 504 ||
+            error.statusCode == -1 ||
+            isNaN(error.statusCode) || // no StatusCode means client side error. These are considered retryable.
             (DefaultRetryCondition.RETRYABLE_SERVICE_ERRORS.has(error.statusCode) &&
                 DefaultRetryCondition.RETRYABLE_SERVICE_ERRORS.get(error.statusCode) === error.serviceCode));
     }
 }
+exports.DefaultRetryCondition = DefaultRetryCondition;
 /**
  * Default retry condition for Retry mechanism
  * NOTE : Retries are not supported for requests that have binary or stream bodies
  */
 DefaultRetryCondition.RETRYABLE_SERVICE_ERRORS = new Map([
-    [401, "NotAuthenticated"],
-    [404, "NotAuthorizedOrNotFound"],
     [409, "IncorrectState"],
-    [409, "NotAuthorizedOrResourceAlreadyExists"],
-    [429, "TooManyRequests"],
-    [500, "InternalServerError"],
-    [401, "NotAuthenticated"],
-    [404, "NotAuthorizedOrNotFound"],
-    [409, "IncorrectState"],
-    [409, "NotAuthorizedOrResourceAlreadyExists"],
-    [429, "TooManyRequests"],
-    [500, "InternalServerError"]
+    [429, "TooManyRequests"]
 ]);
-const NoRetryConfigurationDetails = {
-    terminationStrategy: new waiter_1.MaxAttemptsTerminationStrategy(1),
-    delayStrategy: new waiter_1.ExponentialBackoffDelayStrategy(30),
-    retryCondition: DefaultRetryCondition.shouldBeRetried
+const NO_RETRY_MAXIMUM_NUMBER_OF_ATTEMPTS = 1;
+const NO_RETRY_MAXIMUM_DELAY_IN_SECONDS = 30;
+exports.NoRetryConfigurationDetails = {
+    terminationStrategy: new waiter_1.MaxAttemptsTerminationStrategy(NO_RETRY_MAXIMUM_NUMBER_OF_ATTEMPTS),
+    delayStrategy: new waiter_1.ExponentialBackoffDelayStrategyWithJitter(NO_RETRY_MAXIMUM_DELAY_IN_SECONDS),
+    retryCondition: DefaultRetryCondition.shouldBeRetried,
+    backupBinaryBody: false
 };
 class GenericRetrier {
     constructor(retryConfiguration) {
         this._logger = undefined;
-        const preferredRetryConfig = Object.assign(Object.assign({}, NoRetryConfigurationDetails), retryConfiguration);
-        this.retryConfiguration = preferredRetryConfig;
+        const preferredRetryConfig = Object.assign(Object.assign({}, exports.NoRetryConfigurationDetails), retryConfiguration);
+        this._retryConfiguration = preferredRetryConfig;
+    }
+    static get defaultRetryConfiguration() {
+        return GenericRetrier.DefaultRetryConfiguration;
+    }
+    static set defaultRetryConfiguration(retryConfig) {
+        GenericRetrier.DefaultRetryConfiguration = Object.assign(Object.assign({}, GenericRetrier.DefaultRetryConfiguration), retryConfig);
     }
     set logger(logger) {
         this._logger = logger;
     }
+    get backUpBinaryBody() {
+        return this.retryConfiguration.backupBinaryBody;
+    }
+    get retryConfiguration() {
+        return this._retryConfiguration;
+    }
     static createPreferredRetrier(clientRetryConfiguration, requestRetryConfiguration) {
         let retryConfigToUse = [requestRetryConfiguration, clientRetryConfiguration, {}].filter(configuration => configuration !== null && configuration !== undefined)[0];
-        retryConfigToUse = Object.assign(Object.assign({}, NoRetryConfigurationDetails), retryConfigToUse);
+        retryConfigToUse = Object.assign(Object.assign({}, GenericRetrier.defaultRetryConfiguration), retryConfigToUse);
         return new GenericRetrier(retryConfigToUse);
     }
     makeServiceCall(httpClient, request, excludeBody) {
@@ -18881,9 +22110,17 @@ class GenericRetrier {
             let shouldBeRetried = true;
             while (true) {
                 try {
+                    this.addOpcClientRetryHeader(request);
                     const response = yield httpClient.send(request, excludeBody);
                     if (response.status && response.status >= 200 && response.status <= 299) {
                         return response;
+                    }
+                    else if (response.code === "EOPENBREAKER") {
+                        // Circuit Breaker is in OPEN state
+                        const circuitBreakerError = response;
+                        const errorObject = new __1.OciError(circuitBreakerError.code, "unknown code", circuitBreakerError.message, "unknown");
+                        shouldBeRetried = this.retryConfiguration.retryCondition(errorObject); // TODO: need retryCondition to accept errorObject coming from Circuit Breaker
+                        lastKnownError = errorObject;
                     }
                     else {
                         const errBody = yield helper_1.handleErrorBody(response);
@@ -18896,40 +22133,53 @@ class GenericRetrier {
                     lastKnownError = new __1.OciError(err.code, "unknown code", err.message, "unknown");
                     shouldBeRetried = true;
                 }
-                if (!shouldBeRetried ||
-                    this.retryConfiguration.terminationStrategy.shouldTerminate(waitContext) ||
-                    !GenericRetrier.isRequestRetryable(request)) {
-                    if (this._logger)
-                        this._logger.debug("Not retrying the service call...");
+                if (!shouldBeRetried || !GenericRetrier.isRequestRetryable(request)) {
+                    console.warn(`Request cannot be retried. Not Retrying. Exception occurred : ${lastKnownError}`);
                     throw lastKnownError;
                 }
-                yield waiter_1.delay(this.retryConfiguration.delayStrategy.delay(waitContext));
+                else if (this.retryConfiguration.terminationStrategy.shouldTerminate(waitContext)) {
+                    console.warn(`All retry attempts have exhausted. Total Attempts : ${waitContext.attemptCount +
+                        1}. Last exception occurred : ${lastKnownError}`);
+                    throw lastKnownError;
+                }
+                const delayTime = this.retryConfiguration.delayStrategy.delay(waitContext);
                 waitContext.attemptCount++;
+                console.warn(`Request failed with Exception : ${lastKnownError}\nRetrying request -> Total Attempts : ${waitContext.attemptCount}, Retrying after ${delayTime} seconds...`);
+                yield waiter_1.delay(delayTime);
                 GenericRetrier.refreshRequest(request);
-                if (this._logger)
-                    this._logger.debug("Retrying the service call, attempt : ", waitContext.attemptCount);
             }
         });
     }
     static refreshRequest(request) {
         request.headers.set("x-date", new Date().toUTCString());
-        // TO-DO : Implement resetting/recreating stream/blobs
+    }
+    addOpcClientRetryHeader(request) {
+        const terminationStrategy = this.retryConfiguration.terminationStrategy;
+        const opcClientRetryHeader = request.headers.get(GenericRetrier.OPC_CLIENT_RETRIES_HEADER);
+        if (terminationStrategy instanceof waiter_1.MaxAttemptsTerminationStrategy &&
+            terminationStrategy.maxAttempts > 1 &&
+            (opcClientRetryHeader === undefined || opcClientRetryHeader === null)) {
+            request.headers.set(GenericRetrier.OPC_CLIENT_RETRIES_HEADER, "true");
+        }
     }
     static isRequestRetryable(request) {
         if (!request.body)
             return true;
-        if (request.body) {
-            if (GenericRetrier.isReadableStream(request.body)) {
-                return false;
-            }
-            return true;
+        else if (request.body) {
+            return this.isRetryableStream(request.body);
         }
     }
-    static isReadableStream(obj) {
-        return typeof obj._read === "function" && typeof obj._readableState === "object";
+    static isRetryableStream(obj) {
+        if (obj instanceof Uint8Array || obj instanceof Buffer || typeof obj === "string") {
+            return true;
+        }
+        //Node.JS's Readable, JavaScript's ReadableStream & Blobs are not retry-able stream, return false
+        return false;
     }
 }
 exports.GenericRetrier = GenericRetrier;
+GenericRetrier.OPC_CLIENT_RETRIES_HEADER = "opc-client-retries";
+GenericRetrier.DefaultRetryConfiguration = exports.NoRetryConfigurationDetails;
 //# sourceMappingURL=retrier.js.map
 
 /***/ }),
@@ -18947,18 +22197,18 @@ exports.GenericRetrier = GenericRetrier;
  * which needs to be incorporated when we add retry strategy.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.addRetryToken = void 0;
+exports.addRetryToken = exports.OPC_RETRY_TOKEN_HEADER = void 0;
 const uuidv1 = __nccwpck_require__(8749);
-const OPC_RETRY_TOKEN_HEADER = "opc-retry-token";
+exports.OPC_RETRY_TOKEN_HEADER = "opc-retry-token";
 function addRetryToken(headers) {
     // if user has not passed opc-retry-token
     if (!hasRetryToken(headers)) {
-        headers.append(OPC_RETRY_TOKEN_HEADER, generateRetryToken());
+        headers.append(exports.OPC_RETRY_TOKEN_HEADER, generateRetryToken());
     }
 }
 exports.addRetryToken = addRetryToken;
 function hasRetryToken(headers) {
-    if (headers.has(OPC_RETRY_TOKEN_HEADER)) {
+    if (headers.has(exports.OPC_RETRY_TOKEN_HEADER)) {
         return true;
     }
     return false;
@@ -19134,7 +22384,7 @@ DefaultRequestSigner.methodsThatRequireExtraHeaders = ["POST", "PUT", "PATCH"];
 /***/ }),
 
 /***/ 1563:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -19144,8 +22394,12 @@ DefaultRequestSigner.methodsThatRequireExtraHeaders = ["POST", "PUT", "PATCH"];
 
  * Utility method to check if environment is node or browser
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.checkNotNull = exports.isEmpty = exports.isBrowser = void 0;
+exports.isCircuitBreakerSystemEnabled = exports.checkNotNull = exports.isEmpty = exports.isBrowser = void 0;
+const circuit_breaker_1 = __importDefault(__nccwpck_require__(5620));
 function isBrowser() {
     if (typeof window === "undefined") {
         return false;
@@ -19166,6 +22420,22 @@ function checkNotNull(value, msg) {
     throw new Error(msg);
 }
 exports.checkNotNull = checkNotNull;
+// Utility method to check if circuit breaker should be created
+// This is used when no circuit breaker was created for the client, if not: Check if it was disabled at the client level / global level / environment level in respective order
+// return false means do not create circuit breaker.
+function isCircuitBreakerSystemEnabled(clientConfiguration) {
+    // Client level check
+    const clientLevelCheck = clientConfiguration &&
+        clientConfiguration.circuitBreaker &&
+        clientConfiguration.circuitBreaker.noCircuit;
+    if (clientLevelCheck ||
+        !circuit_breaker_1.default.EnableGlobalCircuitBreaker ||
+        circuit_breaker_1.default.EnableDefaultCircuitBreaker === "false") {
+        return false;
+    }
+    return true;
+}
+exports.isCircuitBreakerSystemEnabled = isCircuitBreakerSystemEnabled;
 //# sourceMappingURL=utils.js.map
 
 /***/ }),
@@ -19189,7 +22459,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.genericWaiter = exports.genericTerminalConditionWaiter = exports.delay = exports.MaxTimeTerminationStrategy = exports.MaxAttemptsTerminationStrategy = exports.FixedTimeDelayStrategy = exports.ExponentialBackoffDelayStrategy = exports.WaitContextImpl = void 0;
+exports.genericWaiter = exports.genericTerminalConditionWaiter = exports.delay = exports.MaxTimeTerminationStrategy = exports.MaxAttemptsTerminationStrategy = exports.FixedTimeDelayStrategy = exports.ExponentialBackoffDelayStrategyWithJitter = exports.ExponentialBackoffDelayStrategy = exports.WaitContextImpl = void 0;
 const __1 = __nccwpck_require__(5049);
 class WaitContextImpl {
     constructor() {
@@ -19201,18 +22471,25 @@ exports.WaitContextImpl = WaitContextImpl;
 class ExponentialBackoffDelayStrategy {
     constructor(maxDelayInSeconds) {
         this.maxDelayInSeconds = maxDelayInSeconds;
-        this.currentDelayInSeconds = 1;
     }
     delay(context) {
-        if (this.currentDelayInSeconds <= 0) {
-            return this.maxDelayInSeconds;
-        }
-        const delay = Math.min(this.currentDelayInSeconds, this.maxDelayInSeconds);
-        this.currentDelayInSeconds *= 2;
+        const currentDelayInSeconds = Math.pow(2, context.attemptCount);
+        const delay = Math.min(currentDelayInSeconds, this.maxDelayInSeconds);
         return delay;
     }
 }
 exports.ExponentialBackoffDelayStrategy = ExponentialBackoffDelayStrategy;
+class ExponentialBackoffDelayStrategyWithJitter extends ExponentialBackoffDelayStrategy {
+    constructor(maxDelayInSeconds) {
+        super(maxDelayInSeconds);
+        this.maxDelayInSeconds = maxDelayInSeconds;
+    }
+    delay(context) {
+        let jitterValue = Math.round(Math.random() * 1000) / 1000;
+        return super.delay(context) + jitterValue;
+    }
+}
+exports.ExponentialBackoffDelayStrategyWithJitter = ExponentialBackoffDelayStrategyWithJitter;
 class FixedTimeDelayStrategy {
     constructor(timeBetweenAttempsInSeconds) {
         this.timeBetweenAttempsInSeconds = timeBetweenAttempsInSeconds;
@@ -19224,10 +22501,13 @@ class FixedTimeDelayStrategy {
 exports.FixedTimeDelayStrategy = FixedTimeDelayStrategy;
 class MaxAttemptsTerminationStrategy {
     constructor(maxAttempts) {
-        this.maxAttempts = maxAttempts - 1;
+        this._maxAttempts = maxAttempts - 1;
     }
     shouldTerminate(context) {
-        return context.attemptCount >= this.maxAttempts;
+        return context.attemptCount >= this._maxAttempts;
+    }
+    get maxAttempts() {
+        return this._maxAttempts;
     }
 }
 exports.MaxAttemptsTerminationStrategy = MaxAttemptsTerminationStrategy;
@@ -19388,7 +22668,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IdentityClient = exports.IdentityApiKeys = void 0;
 const common = __nccwpck_require__(5049);
-const models = __importStar(__nccwpck_require__(7268));
+const model = __importStar(__nccwpck_require__(7268));
 const oci_common_1 = __nccwpck_require__(5049);
 const identity_waiter_1 = __nccwpck_require__(1271);
 const oci_common_2 = __nccwpck_require__(5049);
@@ -19487,7 +22767,7 @@ class IdentityClient {
      * @param ActivateMfaTotpDeviceRequest
      * @return ActivateMfaTotpDeviceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ActivateMfaTotpDevice.ts.html |here} to see how to use ActivateMfaTotpDevice API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ActivateMfaTotpDevice.ts.html |here} to see how to use ActivateMfaTotpDevice API.
      */
     activateMfaTotpDevice(activateMfaTotpDeviceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19503,26 +22783,27 @@ class IdentityClient {
                 "if-match": activateMfaTotpDeviceRequest.ifMatch,
                 "opc-retry-token": activateMfaTotpDeviceRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, activateMfaTotpDeviceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/mfaTotpDevices/{mfaTotpDeviceId}/actions/activate",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(activateMfaTotpDeviceRequest.mfaTotpToken, "MfaTotpToken", models.MfaTotpToken.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(activateMfaTotpDeviceRequest.mfaTotpToken, "MfaTotpToken", model.MfaTotpToken.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, activateMfaTotpDeviceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "mfaTotpDeviceSummary",
-                    bodyModel: "model.MfaTotpDeviceSummary",
+                    bodyModel: model.MfaTotpDeviceSummary,
+                    type: "model.MfaTotpDeviceSummary",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -19552,7 +22833,7 @@ class IdentityClient {
        * @param AddUserToGroupRequest
        * @return AddUserToGroupResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/AddUserToGroup.ts.html |here} to see how to use AddUserToGroup API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/AddUserToGroup.ts.html |here} to see how to use AddUserToGroup API.
        */
     addUserToGroup(addUserToGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19564,26 +22845,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": addUserToGroupRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, addUserToGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/userGroupMemberships",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(addUserToGroupRequest.addUserToGroupDetails, "AddUserToGroupDetails", models.AddUserToGroupDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(addUserToGroupRequest.addUserToGroupDetails, "AddUserToGroupDetails", model.AddUserToGroupDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, addUserToGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "userGroupMembership",
-                    bodyModel: "model.UserGroupMembership",
+                    bodyModel: model.UserGroupMembership,
+                    type: "model.UserGroupMembership",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -19613,7 +22895,7 @@ class IdentityClient {
      * @param AssembleEffectiveTagSetRequest
      * @return AssembleEffectiveTagSetResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/AssembleEffectiveTagSet.ts.html |here} to see how to use AssembleEffectiveTagSet API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/AssembleEffectiveTagSet.ts.html |here} to see how to use AssembleEffectiveTagSet API.
      */
     assembleEffectiveTagSet(assembleEffectiveTagSetRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19627,6 +22909,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, assembleEffectiveTagSetRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -19636,16 +22921,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, assembleEffectiveTagSetRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "TagDefaultSummary[]",
+                    bodyModel: model.TagDefaultSummary,
+                    type: "Array<model.TagDefaultSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -19676,7 +22959,7 @@ class IdentityClient {
      * @param BulkDeleteResourcesRequest
      * @return BulkDeleteResourcesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/BulkDeleteResources.ts.html |here} to see how to use BulkDeleteResources API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/BulkDeleteResources.ts.html |here} to see how to use BulkDeleteResources API.
      */
     bulkDeleteResources(bulkDeleteResourcesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19691,19 +22974,19 @@ class IdentityClient {
                 "opc-request-id": bulkDeleteResourcesRequest.opcRequestId,
                 "opc-retry-token": bulkDeleteResourcesRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkDeleteResourcesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/compartments/{compartmentId}/actions/bulkDeleteResources",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(bulkDeleteResourcesRequest.bulkDeleteResourcesDetails, "BulkDeleteResourcesDetails", models.BulkDeleteResourcesDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(bulkDeleteResourcesRequest.bulkDeleteResourcesDetails, "BulkDeleteResourcesDetails", model.BulkDeleteResourcesDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkDeleteResourcesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -19754,7 +23037,7 @@ class IdentityClient {
        * @param BulkDeleteTagsRequest
        * @return BulkDeleteTagsResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/BulkDeleteTags.ts.html |here} to see how to use BulkDeleteTags API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/BulkDeleteTags.ts.html |here} to see how to use BulkDeleteTags API.
        */
     bulkDeleteTags(bulkDeleteTagsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19767,19 +23050,19 @@ class IdentityClient {
                 "opc-request-id": bulkDeleteTagsRequest.opcRequestId,
                 "opc-retry-token": bulkDeleteTagsRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkDeleteTagsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tags/actions/bulkDelete",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(bulkDeleteTagsRequest.bulkDeleteTagsDetails, "BulkDeleteTagsDetails", models.BulkDeleteTagsDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(bulkDeleteTagsRequest.bulkDeleteTagsDetails, "BulkDeleteTagsDetails", model.BulkDeleteTagsDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkDeleteTagsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -19823,7 +23106,7 @@ class IdentityClient {
        * @param BulkEditTagsRequest
        * @return BulkEditTagsResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/BulkEditTags.ts.html |here} to see how to use BulkEditTags API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/BulkEditTags.ts.html |here} to see how to use BulkEditTags API.
        */
     bulkEditTags(bulkEditTagsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19836,19 +23119,19 @@ class IdentityClient {
                 "opc-request-id": bulkEditTagsRequest.opcRequestId,
                 "opc-retry-token": bulkEditTagsRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkEditTagsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tags/actions/bulkEdit",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(bulkEditTagsRequest.bulkEditTagsDetails, "BulkEditTagsDetails", models.BulkEditTagsDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(bulkEditTagsRequest.bulkEditTagsDetails, "BulkEditTagsDetails", model.BulkEditTagsDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkEditTagsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -19883,7 +23166,7 @@ class IdentityClient {
      * @param BulkMoveResourcesRequest
      * @return BulkMoveResourcesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/BulkMoveResources.ts.html |here} to see how to use BulkMoveResources API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/BulkMoveResources.ts.html |here} to see how to use BulkMoveResources API.
      */
     bulkMoveResources(bulkMoveResourcesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19898,19 +23181,19 @@ class IdentityClient {
                 "opc-request-id": bulkMoveResourcesRequest.opcRequestId,
                 "opc-retry-token": bulkMoveResourcesRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkMoveResourcesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/compartments/{compartmentId}/actions/bulkMoveResources",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(bulkMoveResourcesRequest.bulkMoveResourcesDetails, "BulkMoveResourcesDetails", models.BulkMoveResourcesDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(bulkMoveResourcesRequest.bulkMoveResourcesDetails, "BulkMoveResourcesDetails", model.BulkMoveResourcesDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, bulkMoveResourcesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -19959,7 +23242,7 @@ class IdentityClient {
        * @param CascadeDeleteTagNamespaceRequest
        * @return CascadeDeleteTagNamespaceResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CascadeDeleteTagNamespace.ts.html |here} to see how to use CascadeDeleteTagNamespace API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CascadeDeleteTagNamespace.ts.html |here} to see how to use CascadeDeleteTagNamespace API.
        */
     cascadeDeleteTagNamespace(cascadeDeleteTagNamespaceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -19975,6 +23258,9 @@ class IdentityClient {
                 "opc-request-id": cascadeDeleteTagNamespaceRequest.opcRequestId,
                 "opc-retry-token": cascadeDeleteTagNamespaceRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, cascadeDeleteTagNamespaceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -19984,9 +23270,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, cascadeDeleteTagNamespaceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -20022,7 +23305,7 @@ class IdentityClient {
        * @param ChangeTagNamespaceCompartmentRequest
        * @return ChangeTagNamespaceCompartmentResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ChangeTagNamespaceCompartment.ts.html |here} to see how to use ChangeTagNamespaceCompartment API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ChangeTagNamespaceCompartment.ts.html |here} to see how to use ChangeTagNamespaceCompartment API.
        */
     changeTagNamespaceCompartment(changeTagNamespaceCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20036,19 +23319,19 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": changeTagNamespaceCompartmentRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, changeTagNamespaceCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tagNamespaces/{tagNamespaceId}/actions/changeCompartment",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(changeTagNamespaceCompartmentRequest.changeTagNamespaceCompartmentDetail, "ChangeTagNamespaceCompartmentDetail", models.ChangeTagNamespaceCompartmentDetail.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(changeTagNamespaceCompartmentRequest.changeTagNamespaceCompartmentDetail, "ChangeTagNamespaceCompartmentDetail", model.ChangeTagNamespaceCompartmentDetail.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, changeTagNamespaceCompartmentRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -20083,7 +23366,7 @@ class IdentityClient {
        * @param CreateAuthTokenRequest
        * @return CreateAuthTokenResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateAuthToken.ts.html |here} to see how to use CreateAuthToken API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateAuthToken.ts.html |here} to see how to use CreateAuthToken API.
        */
     createAuthToken(createAuthTokenRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20097,26 +23380,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createAuthTokenRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createAuthTokenRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/authTokens",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createAuthTokenRequest.createAuthTokenDetails, "CreateAuthTokenDetails", models.CreateAuthTokenDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createAuthTokenRequest.createAuthTokenDetails, "CreateAuthTokenDetails", model.CreateAuthTokenDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createAuthTokenRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "authToken",
-                    bodyModel: "model.AuthToken",
+                    bodyModel: model.AuthToken,
+                    type: "model.AuthToken",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20161,7 +23445,7 @@ class IdentityClient {
        * @param CreateCompartmentRequest
        * @return CreateCompartmentResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateCompartment.ts.html |here} to see how to use CreateCompartment API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateCompartment.ts.html |here} to see how to use CreateCompartment API.
        */
     createCompartment(createCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20173,26 +23457,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createCompartmentRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/compartments",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createCompartmentRequest.createCompartmentDetails, "CreateCompartmentDetails", models.CreateCompartmentDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createCompartmentRequest.createCompartmentDetails, "CreateCompartmentDetails", model.CreateCompartmentDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createCompartmentRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "compartment",
-                    bodyModel: "model.Compartment",
+                    bodyModel: model.Compartment,
+                    type: "model.Compartment",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20229,7 +23514,7 @@ class IdentityClient {
        * @param CreateCustomerSecretKeyRequest
        * @return CreateCustomerSecretKeyResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateCustomerSecretKey.ts.html |here} to see how to use CreateCustomerSecretKey API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateCustomerSecretKey.ts.html |here} to see how to use CreateCustomerSecretKey API.
        */
     createCustomerSecretKey(createCustomerSecretKeyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20243,26 +23528,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createCustomerSecretKeyRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createCustomerSecretKeyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/customerSecretKeys",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createCustomerSecretKeyRequest.createCustomerSecretKeyDetails, "CreateCustomerSecretKeyDetails", models.CreateCustomerSecretKeyDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createCustomerSecretKeyRequest.createCustomerSecretKeyDetails, "CreateCustomerSecretKeyDetails", model.CreateCustomerSecretKeyDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createCustomerSecretKeyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "customerSecretKey",
-                    bodyModel: "model.CustomerSecretKey",
+                    bodyModel: model.CustomerSecretKey,
+                    type: "model.CustomerSecretKey",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20306,7 +23592,7 @@ class IdentityClient {
        * @param CreateDynamicGroupRequest
        * @return CreateDynamicGroupResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateDynamicGroup.ts.html |here} to see how to use CreateDynamicGroup API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateDynamicGroup.ts.html |here} to see how to use CreateDynamicGroup API.
        */
     createDynamicGroup(createDynamicGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20318,26 +23604,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createDynamicGroupRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createDynamicGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/dynamicGroups",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createDynamicGroupRequest.createDynamicGroupDetails, "CreateDynamicGroupDetails", models.CreateDynamicGroupDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createDynamicGroupRequest.createDynamicGroupDetails, "CreateDynamicGroupDetails", model.CreateDynamicGroupDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createDynamicGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "dynamicGroup",
-                    bodyModel: "model.DynamicGroup",
+                    bodyModel: model.DynamicGroup,
+                    type: "model.DynamicGroup",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20384,7 +23671,7 @@ class IdentityClient {
        * @param CreateGroupRequest
        * @return CreateGroupResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateGroup.ts.html |here} to see how to use CreateGroup API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateGroup.ts.html |here} to see how to use CreateGroup API.
        */
     createGroup(createGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20396,26 +23683,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createGroupRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/groups",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createGroupRequest.createGroupDetails, "CreateGroupDetails", models.CreateGroupDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createGroupRequest.createGroupDetails, "CreateGroupDetails", model.CreateGroupDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "group",
-                    bodyModel: "model.Group",
+                    bodyModel: model.Group,
+                    type: "model.Group",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20459,7 +23747,7 @@ class IdentityClient {
        * @param CreateIdentityProviderRequest
        * @return CreateIdentityProviderResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateIdentityProvider.ts.html |here} to see how to use CreateIdentityProvider API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateIdentityProvider.ts.html |here} to see how to use CreateIdentityProvider API.
        */
     createIdentityProvider(createIdentityProviderRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20471,26 +23759,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createIdentityProviderRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createIdentityProviderRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/identityProviders",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createIdentityProviderRequest.createIdentityProviderDetails, "CreateIdentityProviderDetails", models.CreateIdentityProviderDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createIdentityProviderRequest.createIdentityProviderDetails, "CreateIdentityProviderDetails", model.CreateIdentityProviderDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createIdentityProviderRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "identityProvider",
-                    bodyModel: "model.IdentityProvider",
+                    bodyModel: model.IdentityProvider,
+                    type: "model.IdentityProvider",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20518,7 +23807,7 @@ class IdentityClient {
      * @param CreateIdpGroupMappingRequest
      * @return CreateIdpGroupMappingResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateIdpGroupMapping.ts.html |here} to see how to use CreateIdpGroupMapping API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateIdpGroupMapping.ts.html |here} to see how to use CreateIdpGroupMapping API.
      */
     createIdpGroupMapping(createIdpGroupMappingRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20532,26 +23821,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createIdpGroupMappingRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createIdpGroupMappingRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/identityProviders/{identityProviderId}/groupMappings",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createIdpGroupMappingRequest.createIdpGroupMappingDetails, "CreateIdpGroupMappingDetails", models.CreateIdpGroupMappingDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createIdpGroupMappingRequest.createIdpGroupMappingDetails, "CreateIdpGroupMappingDetails", model.CreateIdpGroupMappingDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createIdpGroupMappingRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "idpGroupMapping",
-                    bodyModel: "model.IdpGroupMapping",
+                    bodyModel: model.IdpGroupMapping,
+                    type: "model.IdpGroupMapping",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20578,7 +23868,7 @@ class IdentityClient {
      * @param CreateMfaTotpDeviceRequest
      * @return CreateMfaTotpDeviceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateMfaTotpDevice.ts.html |here} to see how to use CreateMfaTotpDevice API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateMfaTotpDevice.ts.html |here} to see how to use CreateMfaTotpDevice API.
      */
     createMfaTotpDevice(createMfaTotpDeviceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20592,6 +23882,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createMfaTotpDeviceRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createMfaTotpDeviceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -20601,16 +23894,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createMfaTotpDeviceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "mfaTotpDevice",
-                    bodyModel: "model.MfaTotpDevice",
+                    bodyModel: model.MfaTotpDevice,
+                    type: "model.MfaTotpDevice",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20657,7 +23948,7 @@ class IdentityClient {
        * @param CreateNetworkSourceRequest
        * @return CreateNetworkSourceResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateNetworkSource.ts.html |here} to see how to use CreateNetworkSource API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateNetworkSource.ts.html |here} to see how to use CreateNetworkSource API.
        */
     createNetworkSource(createNetworkSourceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20669,26 +23960,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createNetworkSourceRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createNetworkSourceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/networkSources",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createNetworkSourceRequest.createNetworkSourceDetails, "CreateNetworkSourceDetails", models.CreateNetworkSourceDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createNetworkSourceRequest.createNetworkSourceDetails, "CreateNetworkSourceDetails", model.CreateNetworkSourceDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createNetworkSourceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "networkSources",
-                    bodyModel: "model.NetworkSources",
+                    bodyModel: model.NetworkSources,
+                    type: "model.NetworkSources",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20715,7 +24007,7 @@ class IdentityClient {
      * @param CreateOAuthClientCredentialRequest
      * @return CreateOAuthClientCredentialResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateOAuthClientCredential.ts.html |here} to see how to use CreateOAuthClientCredential API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateOAuthClientCredential.ts.html |here} to see how to use CreateOAuthClientCredential API.
      */
     createOAuthClientCredential(createOAuthClientCredentialRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20729,26 +24021,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createOAuthClientCredentialRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createOAuthClientCredentialRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/oauth2ClientCredentials",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createOAuthClientCredentialRequest.createOAuth2ClientCredentialDetails, "CreateOAuth2ClientCredentialDetails", models.CreateOAuth2ClientCredentialDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createOAuthClientCredentialRequest.createOAuth2ClientCredentialDetails, "CreateOAuth2ClientCredentialDetails", model.CreateOAuth2ClientCredentialDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createOAuthClientCredentialRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "oAuth2ClientCredential",
-                    bodyModel: "model.OAuth2ClientCredential",
+                    bodyModel: model.OAuth2ClientCredential,
+                    type: "model.OAuth2ClientCredential",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20785,7 +24078,7 @@ class IdentityClient {
        * @param CreateOrResetUIPasswordRequest
        * @return CreateOrResetUIPasswordResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateOrResetUIPassword.ts.html |here} to see how to use CreateOrResetUIPassword API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateOrResetUIPassword.ts.html |here} to see how to use CreateOrResetUIPassword API.
        */
     createOrResetUIPassword(createOrResetUIPasswordRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20799,6 +24092,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createOrResetUIPasswordRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createOrResetUIPasswordRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -20808,16 +24104,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createOrResetUIPasswordRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "uIPassword",
-                    bodyModel: "model.UIPassword",
+                    bodyModel: model.UIPassword,
+                    type: "model.UIPassword",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20860,7 +24154,7 @@ class IdentityClient {
        * @param CreatePolicyRequest
        * @return CreatePolicyResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreatePolicy.ts.html |here} to see how to use CreatePolicy API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreatePolicy.ts.html |here} to see how to use CreatePolicy API.
        */
     createPolicy(createPolicyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20872,26 +24166,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createPolicyRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createPolicyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/policies",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createPolicyRequest.createPolicyDetails, "CreatePolicyDetails", models.CreatePolicyDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createPolicyRequest.createPolicyDetails, "CreatePolicyDetails", model.CreatePolicyDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createPolicyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "policy",
-                    bodyModel: "model.Policy",
+                    bodyModel: model.Policy,
+                    type: "model.Policy",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20918,7 +24213,7 @@ class IdentityClient {
      * @param CreateRegionSubscriptionRequest
      * @return CreateRegionSubscriptionResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateRegionSubscription.ts.html |here} to see how to use CreateRegionSubscription API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateRegionSubscription.ts.html |here} to see how to use CreateRegionSubscription API.
      */
     createRegionSubscription(createRegionSubscriptionRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20932,26 +24227,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createRegionSubscriptionRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createRegionSubscriptionRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tenancies/{tenancyId}/regionSubscriptions",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createRegionSubscriptionRequest.createRegionSubscriptionDetails, "CreateRegionSubscriptionDetails", models.CreateRegionSubscriptionDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createRegionSubscriptionRequest.createRegionSubscriptionDetails, "CreateRegionSubscriptionDetails", model.CreateRegionSubscriptionDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createRegionSubscriptionRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "regionSubscription",
-                    bodyModel: "model.RegionSubscription",
+                    bodyModel: model.RegionSubscription,
+                    type: "model.RegionSubscription",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -20976,7 +24272,7 @@ class IdentityClient {
      * @param CreateSmtpCredentialRequest
      * @return CreateSmtpCredentialResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateSmtpCredential.ts.html |here} to see how to use CreateSmtpCredential API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateSmtpCredential.ts.html |here} to see how to use CreateSmtpCredential API.
      */
     createSmtpCredential(createSmtpCredentialRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20990,26 +24286,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createSmtpCredentialRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createSmtpCredentialRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/smtpCredentials",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createSmtpCredentialRequest.createSmtpCredentialDetails, "CreateSmtpCredentialDetails", models.CreateSmtpCredentialDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createSmtpCredentialRequest.createSmtpCredentialDetails, "CreateSmtpCredentialDetails", model.CreateSmtpCredentialDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createSmtpCredentialRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "smtpCredential",
-                    bodyModel: "model.SmtpCredential",
+                    bodyModel: model.SmtpCredential,
+                    type: "model.SmtpCredential",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -21047,7 +24344,7 @@ class IdentityClient {
        * @param CreateSwiftPasswordRequest
        * @return CreateSwiftPasswordResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateSwiftPassword.ts.html |here} to see how to use CreateSwiftPassword API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateSwiftPassword.ts.html |here} to see how to use CreateSwiftPassword API.
        */
     createSwiftPassword(createSwiftPasswordRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21061,26 +24358,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createSwiftPasswordRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createSwiftPasswordRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/swiftPasswords",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createSwiftPasswordRequest.createSwiftPasswordDetails, "CreateSwiftPasswordDetails", models.CreateSwiftPasswordDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createSwiftPasswordRequest.createSwiftPasswordDetails, "CreateSwiftPasswordDetails", model.CreateSwiftPasswordDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createSwiftPasswordRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "swiftPassword",
-                    bodyModel: "model.SwiftPassword",
+                    bodyModel: model.SwiftPassword,
+                    type: "model.SwiftPassword",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -21128,7 +24426,7 @@ class IdentityClient {
        * @param CreateTagRequest
        * @return CreateTagResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateTag.ts.html |here} to see how to use CreateTag API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateTag.ts.html |here} to see how to use CreateTag API.
        */
     createTag(createTagRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21142,26 +24440,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createTagRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createTagRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tagNamespaces/{tagNamespaceId}/tags",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createTagRequest.createTagDetails, "CreateTagDetails", models.CreateTagDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createTagRequest.createTagDetails, "CreateTagDetails", model.CreateTagDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createTagRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tag",
-                    bodyModel: "model.Tag",
+                    bodyModel: model.Tag,
+                    type: "model.Tag",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -21195,7 +24494,7 @@ class IdentityClient {
        * @param CreateTagDefaultRequest
        * @return CreateTagDefaultResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateTagDefault.ts.html |here} to see how to use CreateTagDefault API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateTagDefault.ts.html |here} to see how to use CreateTagDefault API.
        */
     createTagDefault(createTagDefaultRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21208,26 +24507,27 @@ class IdentityClient {
                 "opc-retry-token": createTagDefaultRequest.opcRetryToken,
                 "opc-request-id": createTagDefaultRequest.opcRequestId
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createTagDefaultRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tagDefaults",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createTagDefaultRequest.createTagDefaultDetails, "CreateTagDefaultDetails", models.CreateTagDefaultDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createTagDefaultRequest.createTagDefaultDetails, "CreateTagDefaultDetails", model.CreateTagDefaultDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createTagDefaultRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tagDefault",
-                    bodyModel: "model.TagDefault",
+                    bodyModel: model.TagDefault,
+                    type: "model.TagDefault",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -21267,7 +24567,7 @@ class IdentityClient {
        * @param CreateTagNamespaceRequest
        * @return CreateTagNamespaceResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateTagNamespace.ts.html |here} to see how to use CreateTagNamespace API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateTagNamespace.ts.html |here} to see how to use CreateTagNamespace API.
        */
     createTagNamespace(createTagNamespaceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21279,26 +24579,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createTagNamespaceRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createTagNamespaceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tagNamespaces",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createTagNamespaceRequest.createTagNamespaceDetails, "CreateTagNamespaceDetails", models.CreateTagNamespaceDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createTagNamespaceRequest.createTagNamespaceDetails, "CreateTagNamespaceDetails", model.CreateTagNamespaceDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createTagNamespaceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tagNamespace",
-                    bodyModel: "model.TagNamespace",
+                    bodyModel: model.TagNamespace,
+                    type: "model.TagNamespace",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -21354,7 +24655,7 @@ class IdentityClient {
        * @param CreateUserRequest
        * @return CreateUserResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/CreateUser.ts.html |here} to see how to use CreateUser API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/CreateUser.ts.html |here} to see how to use CreateUser API.
        */
     createUser(createUserRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21366,26 +24667,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": createUserRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createUserRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(createUserRequest.createUserDetails, "CreateUserDetails", models.CreateUserDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(createUserRequest.createUserDetails, "CreateUserDetails", model.CreateUserDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, createUserRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "user",
-                    bodyModel: "model.User",
+                    bodyModel: model.User,
+                    type: "model.User",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -21417,7 +24719,7 @@ class IdentityClient {
        * @param DeleteApiKeyRequest
        * @return DeleteApiKeyResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteApiKey.ts.html |here} to see how to use DeleteApiKey API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteApiKey.ts.html |here} to see how to use DeleteApiKey API.
        */
     deleteApiKey(deleteApiKeyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21432,6 +24734,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteApiKeyRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteApiKeyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21441,9 +24746,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteApiKeyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21469,7 +24771,7 @@ class IdentityClient {
      * @param DeleteAuthTokenRequest
      * @return DeleteAuthTokenResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteAuthToken.ts.html |here} to see how to use DeleteAuthToken API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteAuthToken.ts.html |here} to see how to use DeleteAuthToken API.
      */
     deleteAuthToken(deleteAuthTokenRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21484,6 +24786,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteAuthTokenRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteAuthTokenRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21493,9 +24798,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteAuthTokenRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21521,7 +24823,7 @@ class IdentityClient {
      * @param DeleteCompartmentRequest
      * @return DeleteCompartmentResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteCompartment.ts.html |here} to see how to use DeleteCompartment API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteCompartment.ts.html |here} to see how to use DeleteCompartment API.
      */
     deleteCompartment(deleteCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21535,6 +24837,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteCompartmentRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21544,9 +24849,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteCompartmentRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21577,7 +24879,7 @@ class IdentityClient {
      * @param DeleteCustomerSecretKeyRequest
      * @return DeleteCustomerSecretKeyResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteCustomerSecretKey.ts.html |here} to see how to use DeleteCustomerSecretKey API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteCustomerSecretKey.ts.html |here} to see how to use DeleteCustomerSecretKey API.
      */
     deleteCustomerSecretKey(deleteCustomerSecretKeyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21592,6 +24894,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteCustomerSecretKeyRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteCustomerSecretKeyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21601,9 +24906,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteCustomerSecretKeyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21629,7 +24931,7 @@ class IdentityClient {
      * @param DeleteDynamicGroupRequest
      * @return DeleteDynamicGroupResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteDynamicGroup.ts.html |here} to see how to use DeleteDynamicGroup API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteDynamicGroup.ts.html |here} to see how to use DeleteDynamicGroup API.
      */
     deleteDynamicGroup(deleteDynamicGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21643,6 +24945,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteDynamicGroupRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteDynamicGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21652,9 +24957,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteDynamicGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21680,7 +24982,7 @@ class IdentityClient {
      * @param DeleteGroupRequest
      * @return DeleteGroupResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteGroup.ts.html |here} to see how to use DeleteGroup API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteGroup.ts.html |here} to see how to use DeleteGroup API.
      */
     deleteGroup(deleteGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21694,6 +24996,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteGroupRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21703,9 +25008,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21732,7 +25034,7 @@ class IdentityClient {
      * @param DeleteIdentityProviderRequest
      * @return DeleteIdentityProviderResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteIdentityProvider.ts.html |here} to see how to use DeleteIdentityProvider API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteIdentityProvider.ts.html |here} to see how to use DeleteIdentityProvider API.
      */
     deleteIdentityProvider(deleteIdentityProviderRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21746,6 +25048,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteIdentityProviderRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteIdentityProviderRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21755,9 +25060,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteIdentityProviderRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21782,7 +25084,7 @@ class IdentityClient {
      * @param DeleteIdpGroupMappingRequest
      * @return DeleteIdpGroupMappingResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteIdpGroupMapping.ts.html |here} to see how to use DeleteIdpGroupMapping API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteIdpGroupMapping.ts.html |here} to see how to use DeleteIdpGroupMapping API.
      */
     deleteIdpGroupMapping(deleteIdpGroupMappingRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21797,6 +25099,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteIdpGroupMappingRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteIdpGroupMappingRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21806,9 +25111,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteIdpGroupMappingRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21834,7 +25136,7 @@ class IdentityClient {
      * @param DeleteMfaTotpDeviceRequest
      * @return DeleteMfaTotpDeviceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteMfaTotpDevice.ts.html |here} to see how to use DeleteMfaTotpDevice API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteMfaTotpDevice.ts.html |here} to see how to use DeleteMfaTotpDevice API.
      */
     deleteMfaTotpDevice(deleteMfaTotpDeviceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21849,6 +25151,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteMfaTotpDeviceRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteMfaTotpDeviceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21858,9 +25163,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteMfaTotpDeviceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21886,7 +25188,7 @@ class IdentityClient {
      * @param DeleteNetworkSourceRequest
      * @return DeleteNetworkSourceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteNetworkSource.ts.html |here} to see how to use DeleteNetworkSource API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteNetworkSource.ts.html |here} to see how to use DeleteNetworkSource API.
      */
     deleteNetworkSource(deleteNetworkSourceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21900,6 +25202,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteNetworkSourceRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteNetworkSourceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21909,9 +25214,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteNetworkSourceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21937,7 +25239,7 @@ class IdentityClient {
      * @param DeleteOAuthClientCredentialRequest
      * @return DeleteOAuthClientCredentialResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteOAuthClientCredential.ts.html |here} to see how to use DeleteOAuthClientCredential API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteOAuthClientCredential.ts.html |here} to see how to use DeleteOAuthClientCredential API.
      */
     deleteOAuthClientCredential(deleteOAuthClientCredentialRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21952,6 +25254,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteOAuthClientCredentialRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteOAuthClientCredentialRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -21961,9 +25266,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteOAuthClientCredentialRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -21988,7 +25290,7 @@ class IdentityClient {
      * @param DeletePolicyRequest
      * @return DeletePolicyResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeletePolicy.ts.html |here} to see how to use DeletePolicy API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeletePolicy.ts.html |here} to see how to use DeletePolicy API.
      */
     deletePolicy(deletePolicyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22002,6 +25304,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deletePolicyRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deletePolicyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22011,9 +25316,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deletePolicyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -22039,7 +25341,7 @@ class IdentityClient {
      * @param DeleteSmtpCredentialRequest
      * @return DeleteSmtpCredentialResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteSmtpCredential.ts.html |here} to see how to use DeleteSmtpCredential API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteSmtpCredential.ts.html |here} to see how to use DeleteSmtpCredential API.
      */
     deleteSmtpCredential(deleteSmtpCredentialRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22054,6 +25356,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteSmtpCredentialRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteSmtpCredentialRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22063,9 +25368,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteSmtpCredentialRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -22093,7 +25395,7 @@ class IdentityClient {
        * @param DeleteSwiftPasswordRequest
        * @return DeleteSwiftPasswordResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteSwiftPassword.ts.html |here} to see how to use DeleteSwiftPassword API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteSwiftPassword.ts.html |here} to see how to use DeleteSwiftPassword API.
        */
     deleteSwiftPassword(deleteSwiftPasswordRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22108,6 +25410,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteSwiftPasswordRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteSwiftPasswordRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22117,9 +25422,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteSwiftPasswordRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -22165,7 +25467,7 @@ class IdentityClient {
        * @param DeleteTagRequest
        * @return DeleteTagResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteTag.ts.html |here} to see how to use DeleteTag API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteTag.ts.html |here} to see how to use DeleteTag API.
        */
     deleteTag(deleteTagRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22180,6 +25482,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteTagRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteTagRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22189,9 +25494,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteTagRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -22222,7 +25524,7 @@ class IdentityClient {
      * @param DeleteTagDefaultRequest
      * @return DeleteTagDefaultResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteTagDefault.ts.html |here} to see how to use DeleteTagDefault API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteTagDefault.ts.html |here} to see how to use DeleteTagDefault API.
      */
     deleteTagDefault(deleteTagDefaultRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22237,6 +25539,9 @@ class IdentityClient {
                 "opc-request-id": deleteTagDefaultRequest.opcRequestId,
                 "if-match": deleteTagDefaultRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteTagDefaultRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22246,9 +25551,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteTagDefaultRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -22280,7 +25582,7 @@ class IdentityClient {
        * @param DeleteTagNamespaceRequest
        * @return DeleteTagNamespaceResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteTagNamespace.ts.html |here} to see how to use DeleteTagNamespace API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteTagNamespace.ts.html |here} to see how to use DeleteTagNamespace API.
        */
     deleteTagNamespace(deleteTagNamespaceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22295,6 +25597,9 @@ class IdentityClient {
                 "if-match": deleteTagNamespaceRequest.ifMatch,
                 "opc-request-id": deleteTagNamespaceRequest.opcRequestId
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteTagNamespaceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22304,9 +25609,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteTagNamespaceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -22331,7 +25633,7 @@ class IdentityClient {
      * @param DeleteUserRequest
      * @return DeleteUserResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/DeleteUser.ts.html |here} to see how to use DeleteUser API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/DeleteUser.ts.html |here} to see how to use DeleteUser API.
      */
     deleteUser(deleteUserRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22345,6 +25647,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": deleteUserRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteUserRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22354,9 +25659,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, deleteUserRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -22382,7 +25684,7 @@ class IdentityClient {
      * @param GenerateTotpSeedRequest
      * @return GenerateTotpSeedResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GenerateTotpSeed.ts.html |here} to see how to use GenerateTotpSeed API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GenerateTotpSeed.ts.html |here} to see how to use GenerateTotpSeed API.
      */
     generateTotpSeed(generateTotpSeedRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22397,6 +25699,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": generateTotpSeedRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, generateTotpSeedRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22406,16 +25711,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, generateTotpSeedRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "mfaTotpDevice",
-                    bodyModel: "model.MfaTotpDevice",
+                    bodyModel: model.MfaTotpDevice,
+                    type: "model.MfaTotpDevice",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22443,7 +25746,7 @@ class IdentityClient {
      * @param GetAuthenticationPolicyRequest
      * @return GetAuthenticationPolicyResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetAuthenticationPolicy.ts.html |here} to see how to use GetAuthenticationPolicy API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetAuthenticationPolicy.ts.html |here} to see how to use GetAuthenticationPolicy API.
      */
     getAuthenticationPolicy(getAuthenticationPolicyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22456,6 +25759,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getAuthenticationPolicyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22465,16 +25771,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getAuthenticationPolicyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "authenticationPolicy",
-                    bodyModel: "model.AuthenticationPolicy",
+                    bodyModel: model.AuthenticationPolicy,
+                    type: "model.AuthenticationPolicy",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22508,7 +25812,7 @@ class IdentityClient {
        * @param GetCompartmentRequest
        * @return GetCompartmentResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetCompartment.ts.html |here} to see how to use GetCompartment API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetCompartment.ts.html |here} to see how to use GetCompartment API.
        */
     getCompartment(getCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22521,6 +25825,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22530,16 +25837,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getCompartmentRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "compartment",
-                    bodyModel: "model.Compartment",
+                    bodyModel: model.Compartment,
+                    type: "model.Compartment",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22566,7 +25871,7 @@ class IdentityClient {
      * @param GetDynamicGroupRequest
      * @return GetDynamicGroupResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetDynamicGroup.ts.html |here} to see how to use GetDynamicGroup API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetDynamicGroup.ts.html |here} to see how to use GetDynamicGroup API.
      */
     getDynamicGroup(getDynamicGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22579,6 +25884,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getDynamicGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22588,16 +25896,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getDynamicGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "dynamicGroup",
-                    bodyModel: "model.DynamicGroup",
+                    bodyModel: model.DynamicGroup,
+                    type: "model.DynamicGroup",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22628,7 +25934,7 @@ class IdentityClient {
        * @param GetGroupRequest
        * @return GetGroupResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetGroup.ts.html |here} to see how to use GetGroup API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetGroup.ts.html |here} to see how to use GetGroup API.
        */
     getGroup(getGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22641,6 +25947,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22650,16 +25959,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "group",
-                    bodyModel: "model.Group",
+                    bodyModel: model.Group,
+                    type: "model.Group",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22685,7 +25992,7 @@ class IdentityClient {
      * @param GetIdentityProviderRequest
      * @return GetIdentityProviderResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetIdentityProvider.ts.html |here} to see how to use GetIdentityProvider API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetIdentityProvider.ts.html |here} to see how to use GetIdentityProvider API.
      */
     getIdentityProvider(getIdentityProviderRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22698,6 +26005,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getIdentityProviderRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22707,16 +26017,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getIdentityProviderRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "identityProvider",
-                    bodyModel: "model.IdentityProvider",
+                    bodyModel: model.IdentityProvider,
+                    type: "model.IdentityProvider",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22742,7 +26050,7 @@ class IdentityClient {
      * @param GetIdpGroupMappingRequest
      * @return GetIdpGroupMappingResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetIdpGroupMapping.ts.html |here} to see how to use GetIdpGroupMapping API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetIdpGroupMapping.ts.html |here} to see how to use GetIdpGroupMapping API.
      */
     getIdpGroupMapping(getIdpGroupMappingRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22756,6 +26064,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getIdpGroupMappingRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22765,16 +26076,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getIdpGroupMappingRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "idpGroupMapping",
-                    bodyModel: "model.IdpGroupMapping",
+                    bodyModel: model.IdpGroupMapping,
+                    type: "model.IdpGroupMapping",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22801,7 +26110,7 @@ class IdentityClient {
      * @param GetMfaTotpDeviceRequest
      * @return GetMfaTotpDeviceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetMfaTotpDevice.ts.html |here} to see how to use GetMfaTotpDevice API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetMfaTotpDevice.ts.html |here} to see how to use GetMfaTotpDevice API.
      */
     getMfaTotpDevice(getMfaTotpDeviceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22815,6 +26124,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getMfaTotpDeviceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22824,16 +26136,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getMfaTotpDeviceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "mfaTotpDeviceSummary",
-                    bodyModel: "model.MfaTotpDeviceSummary",
+                    bodyModel: model.MfaTotpDeviceSummary,
+                    type: "model.MfaTotpDeviceSummary",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22860,7 +26170,7 @@ class IdentityClient {
      * @param GetNetworkSourceRequest
      * @return GetNetworkSourceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetNetworkSource.ts.html |here} to see how to use GetNetworkSource API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetNetworkSource.ts.html |here} to see how to use GetNetworkSource API.
      */
     getNetworkSource(getNetworkSourceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22873,6 +26183,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getNetworkSourceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22882,16 +26195,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getNetworkSourceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "networkSources",
-                    bodyModel: "model.NetworkSources",
+                    bodyModel: model.NetworkSources,
+                    type: "model.NetworkSources",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22917,7 +26228,7 @@ class IdentityClient {
      * @param GetPolicyRequest
      * @return GetPolicyResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetPolicy.ts.html |here} to see how to use GetPolicy API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetPolicy.ts.html |here} to see how to use GetPolicy API.
      */
     getPolicy(getPolicyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22930,6 +26241,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getPolicyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22939,16 +26253,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getPolicyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "policy",
-                    bodyModel: "model.Policy",
+                    bodyModel: model.Policy,
+                    type: "model.Policy",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -22974,7 +26286,7 @@ class IdentityClient {
      * @param GetTagRequest
      * @return GetTagResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetTag.ts.html |here} to see how to use GetTag API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetTag.ts.html |here} to see how to use GetTag API.
      */
     getTag(getTagRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22988,6 +26300,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTagRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -22997,16 +26312,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTagRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tag",
-                    bodyModel: "model.Tag",
+                    bodyModel: model.Tag,
+                    type: "model.Tag",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23033,7 +26346,7 @@ class IdentityClient {
      * @param GetTagDefaultRequest
      * @return GetTagDefaultResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetTagDefault.ts.html |here} to see how to use GetTagDefault API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetTagDefault.ts.html |here} to see how to use GetTagDefault API.
      */
     getTagDefault(getTagDefaultRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23046,6 +26359,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTagDefaultRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23055,16 +26371,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTagDefaultRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tagDefault",
-                    bodyModel: "model.TagDefault",
+                    bodyModel: model.TagDefault,
+                    type: "model.TagDefault",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23091,7 +26405,7 @@ class IdentityClient {
      * @param GetTagNamespaceRequest
      * @return GetTagNamespaceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetTagNamespace.ts.html |here} to see how to use GetTagNamespace API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetTagNamespace.ts.html |here} to see how to use GetTagNamespace API.
      */
     getTagNamespace(getTagNamespaceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23104,6 +26418,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTagNamespaceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23113,16 +26430,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTagNamespaceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tagNamespace",
-                    bodyModel: "model.TagNamespace",
+                    bodyModel: model.TagNamespace,
+                    type: "model.TagNamespace",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23145,7 +26460,7 @@ class IdentityClient {
      * @param GetTaggingWorkRequestRequest
      * @return GetTaggingWorkRequestResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetTaggingWorkRequest.ts.html |here} to see how to use GetTaggingWorkRequest API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetTaggingWorkRequest.ts.html |here} to see how to use GetTaggingWorkRequest API.
      */
     getTaggingWorkRequest(getTaggingWorkRequestRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23158,6 +26473,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTaggingWorkRequestRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23167,16 +26485,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTaggingWorkRequestRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "taggingWorkRequest",
-                    bodyModel: "model.TaggingWorkRequest",
+                    bodyModel: model.TaggingWorkRequest,
+                    type: "model.TaggingWorkRequest",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23202,7 +26518,7 @@ class IdentityClient {
      * @param GetTenancyRequest
      * @return GetTenancyResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetTenancy.ts.html |here} to see how to use GetTenancy API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetTenancy.ts.html |here} to see how to use GetTenancy API.
      */
     getTenancy(getTenancyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23215,6 +26531,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTenancyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23224,16 +26543,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getTenancyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tenancy",
-                    bodyModel: "model.Tenancy",
+                    bodyModel: model.Tenancy,
+                    type: "model.Tenancy",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23254,7 +26571,7 @@ class IdentityClient {
      * @param GetUserRequest
      * @return GetUserResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetUser.ts.html |here} to see how to use GetUser API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetUser.ts.html |here} to see how to use GetUser API.
      */
     getUser(getUserRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23267,6 +26584,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getUserRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23276,16 +26596,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getUserRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "user",
-                    bodyModel: "model.User",
+                    bodyModel: model.User,
+                    type: "model.User",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23311,7 +26629,7 @@ class IdentityClient {
      * @param GetUserGroupMembershipRequest
      * @return GetUserGroupMembershipResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetUserGroupMembership.ts.html |here} to see how to use GetUserGroupMembership API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetUserGroupMembership.ts.html |here} to see how to use GetUserGroupMembership API.
      */
     getUserGroupMembership(getUserGroupMembershipRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23324,6 +26642,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getUserGroupMembershipRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23333,16 +26654,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getUserGroupMembershipRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "userGroupMembership",
-                    bodyModel: "model.UserGroupMembership",
+                    bodyModel: model.UserGroupMembership,
+                    type: "model.UserGroupMembership",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23370,7 +26689,7 @@ class IdentityClient {
      * @param GetUserUIPasswordInformationRequest
      * @return GetUserUIPasswordInformationResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetUserUIPasswordInformation.ts.html |here} to see how to use GetUserUIPasswordInformation API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetUserUIPasswordInformation.ts.html |here} to see how to use GetUserUIPasswordInformation API.
      */
     getUserUIPasswordInformation(getUserUIPasswordInformationRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23383,6 +26702,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getUserUIPasswordInformationRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23392,16 +26714,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getUserUIPasswordInformationRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "uIPasswordInformation",
-                    bodyModel: "model.UIPasswordInformation",
+                    bodyModel: model.UIPasswordInformation,
+                    type: "model.UIPasswordInformation",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23429,7 +26749,7 @@ class IdentityClient {
      * @param GetWorkRequestRequest
      * @return GetWorkRequestResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/GetWorkRequest.ts.html |here} to see how to use GetWorkRequest API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/GetWorkRequest.ts.html |here} to see how to use GetWorkRequest API.
      */
     getWorkRequest(getWorkRequestRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23442,6 +26762,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getWorkRequestRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23451,16 +26774,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, getWorkRequestRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "workRequest",
-                    bodyModel: "model.WorkRequest",
+                    bodyModel: model.WorkRequest,
+                    type: "model.WorkRequest",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23490,7 +26811,7 @@ class IdentityClient {
        * @param ListApiKeysRequest
        * @return ListApiKeysResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListApiKeys.ts.html |here} to see how to use ListApiKeys API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListApiKeys.ts.html |here} to see how to use ListApiKeys API.
        */
     listApiKeys(listApiKeysRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23503,6 +26824,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listApiKeysRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23512,16 +26836,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listApiKeysRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "ApiKey[]",
+                    bodyModel: model.ApiKey,
+                    type: "Array<model.ApiKey>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23549,7 +26871,7 @@ class IdentityClient {
      * @param ListAuthTokensRequest
      * @return ListAuthTokensResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListAuthTokens.ts.html |here} to see how to use ListAuthTokens API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListAuthTokens.ts.html |here} to see how to use ListAuthTokens API.
      */
     listAuthTokens(listAuthTokensRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23562,6 +26884,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listAuthTokensRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23571,16 +26896,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listAuthTokensRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "AuthToken[]",
+                    bodyModel: model.AuthToken,
+                    type: "Array<model.AuthToken>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23611,7 +26934,7 @@ class IdentityClient {
      * @param ListAvailabilityDomainsRequest
      * @return ListAvailabilityDomainsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListAvailabilityDomains.ts.html |here} to see how to use ListAvailabilityDomains API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListAvailabilityDomains.ts.html |here} to see how to use ListAvailabilityDomains API.
      */
     listAvailabilityDomains(listAvailabilityDomainsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23624,6 +26947,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listAvailabilityDomainsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23633,16 +26959,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listAvailabilityDomainsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "AvailabilityDomain[]",
+                    bodyModel: model.AvailabilityDomain,
+                    type: "Array<model.AvailabilityDomain>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23675,7 +26999,7 @@ class IdentityClient {
      * @param ListBulkActionResourceTypesRequest
      * @return ListBulkActionResourceTypesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListBulkActionResourceTypes.ts.html |here} to see how to use ListBulkActionResourceTypes API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListBulkActionResourceTypes.ts.html |here} to see how to use ListBulkActionResourceTypes API.
      */
     listBulkActionResourceTypes(listBulkActionResourceTypesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23690,6 +27014,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listBulkActionResourceTypesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23699,16 +27026,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listBulkActionResourceTypesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "bulkActionResourceTypeCollection",
-                    bodyModel: "model.BulkActionResourceTypeCollection",
+                    bodyModel: model.BulkActionResourceTypeCollection,
+                    type: "model.BulkActionResourceTypeCollection",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23735,7 +27060,7 @@ class IdentityClient {
      * @param ListBulkEditTagsResourceTypesRequest
      * @return ListBulkEditTagsResourceTypesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListBulkEditTagsResourceTypes.ts.html |here} to see how to use ListBulkEditTagsResourceTypes API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListBulkEditTagsResourceTypes.ts.html |here} to see how to use ListBulkEditTagsResourceTypes API.
      */
     listBulkEditTagsResourceTypes(listBulkEditTagsResourceTypesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23749,6 +27074,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listBulkEditTagsResourceTypesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23758,16 +27086,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listBulkEditTagsResourceTypesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "bulkEditTagsResourceTypeCollection",
-                    bodyModel: "model.BulkEditTagsResourceTypeCollection",
+                    bodyModel: model.BulkEditTagsResourceTypeCollection,
+                    type: "model.BulkEditTagsResourceTypeCollection",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23811,7 +27137,7 @@ class IdentityClient {
        * @param ListCompartmentsRequest
        * @return ListCompartmentsResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListCompartments.ts.html |here} to see how to use ListCompartments API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListCompartments.ts.html |here} to see how to use ListCompartments API.
        */
     listCompartments(listCompartmentsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23832,6 +27158,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listCompartmentsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23841,16 +27170,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listCompartmentsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "Compartment[]",
+                    bodyModel: model.Compartment,
+                    type: "Array<model.Compartment>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23872,6 +27199,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listCompartmentsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.Compartment objects
      * contained in responses from the listCompartments operation. This iterator will fetch more data from the
      * server as needed.
@@ -23882,6 +27210,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listCompartments(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listCompartmentsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listCompartments operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -23891,13 +27220,32 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listCompartments(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.Compartment objects
+     * contained in responses from the listCompartments operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listCompartmentsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listCompartments(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listCompartments operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listCompartmentsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listCompartments(req));
+    }
+    /**
      * Lists all the tags enabled for cost-tracking in the specified tenancy. For information about
      * cost-tracking tags, see [Using Cost-tracking Tags](https://docs.cloud.oracle.com/Content/Identity/Concepts/taggingoverview.htm#costs).
      *
      * @param ListCostTrackingTagsRequest
      * @return ListCostTrackingTagsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListCostTrackingTags.ts.html |here} to see how to use ListCostTrackingTags API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListCostTrackingTags.ts.html |here} to see how to use ListCostTrackingTags API.
      */
     listCostTrackingTags(listCostTrackingTagsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23912,6 +27260,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listCostTrackingTagsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23921,16 +27272,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listCostTrackingTagsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "Tag[]",
+                    bodyModel: model.Tag,
+                    type: "Array<model.Tag>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -23952,6 +27301,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listCostTrackingTagsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.Tag objects
      * contained in responses from the listCostTrackingTags operation. This iterator will fetch more data from the
      * server as needed.
@@ -23962,6 +27312,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listCostTrackingTags(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listCostTrackingTagsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listCostTrackingTags operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -23971,13 +27322,32 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listCostTrackingTags(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.Tag objects
+     * contained in responses from the listCostTrackingTags operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listCostTrackingTagsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listCostTrackingTags(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listCostTrackingTags operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listCostTrackingTagsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listCostTrackingTags(req));
+    }
+    /**
      * Lists the secret keys for the specified user. The returned object contains the secret key's OCID, but not
      * the secret key itself. The actual secret key is returned only upon creation.
      *
      * @param ListCustomerSecretKeysRequest
      * @return ListCustomerSecretKeysResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListCustomerSecretKeys.ts.html |here} to see how to use ListCustomerSecretKeys API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListCustomerSecretKeys.ts.html |here} to see how to use ListCustomerSecretKeys API.
      */
     listCustomerSecretKeys(listCustomerSecretKeysRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23990,6 +27360,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listCustomerSecretKeysRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -23999,16 +27372,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listCustomerSecretKeysRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "CustomerSecretKeySummary[]",
+                    bodyModel: model.CustomerSecretKeySummary,
+                    type: "Array<model.CustomerSecretKeySummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24037,7 +27408,7 @@ class IdentityClient {
      * @param ListDynamicGroupsRequest
      * @return ListDynamicGroupsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListDynamicGroups.ts.html |here} to see how to use ListDynamicGroups API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListDynamicGroups.ts.html |here} to see how to use ListDynamicGroups API.
      */
     listDynamicGroups(listDynamicGroupsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24056,6 +27427,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listDynamicGroupsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24065,16 +27439,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listDynamicGroupsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "DynamicGroup[]",
+                    bodyModel: model.DynamicGroup,
+                    type: "Array<model.DynamicGroup>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24096,6 +27468,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listDynamicGroupsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.DynamicGroup objects
      * contained in responses from the listDynamicGroups operation. This iterator will fetch more data from the
      * server as needed.
@@ -24106,12 +27479,32 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listDynamicGroups(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listDynamicGroupsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listDynamicGroups operation. This iterator
      * will fetch more data from the server as needed.
      *
      * @param request a request which can be sent to the service operation
      */
     listAllDynamicGroupsResponses(request) {
+        return oci_common_1.paginateResponses(request, req => this.listDynamicGroups(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the models.DynamicGroup objects
+     * contained in responses from the listDynamicGroups operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listDynamicGroupsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listDynamicGroups(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listDynamicGroups operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listDynamicGroupsResponseIterator(request) {
         return oci_common_1.paginateResponses(request, req => this.listDynamicGroups(req));
     }
     /**
@@ -24122,7 +27515,7 @@ class IdentityClient {
      * @param ListFaultDomainsRequest
      * @return ListFaultDomainsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListFaultDomains.ts.html |here} to see how to use ListFaultDomains API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListFaultDomains.ts.html |here} to see how to use ListFaultDomains API.
      */
     listFaultDomains(listFaultDomainsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24136,6 +27529,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listFaultDomainsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24145,16 +27541,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listFaultDomainsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "FaultDomain[]",
+                    bodyModel: model.FaultDomain,
+                    type: "Array<model.FaultDomain>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24178,7 +27572,7 @@ class IdentityClient {
      * @param ListGroupsRequest
      * @return ListGroupsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListGroups.ts.html |here} to see how to use ListGroups API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListGroups.ts.html |here} to see how to use ListGroups API.
      */
     listGroups(listGroupsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24197,6 +27591,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listGroupsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24206,16 +27603,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listGroupsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "Group[]",
+                    bodyModel: model.Group,
+                    type: "Array<model.Group>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24237,6 +27632,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listGroupsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.Group objects
      * contained in responses from the listGroups operation. This iterator will fetch more data from the
      * server as needed.
@@ -24247,6 +27643,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listGroups(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listGroupsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listGroups operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -24256,11 +27653,30 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listGroups(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.Group objects
+     * contained in responses from the listGroups operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listGroupsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listGroups(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listGroups operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listGroupsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listGroups(req));
+    }
+    /**
      * Lists the identity provider groups.
      * @param ListIdentityProviderGroupsRequest
      * @return ListIdentityProviderGroupsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListIdentityProviderGroups.ts.html |here} to see how to use ListIdentityProviderGroups API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListIdentityProviderGroups.ts.html |here} to see how to use ListIdentityProviderGroups API.
      */
     listIdentityProviderGroups(listIdentityProviderGroupsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24278,6 +27694,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listIdentityProviderGroupsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24287,16 +27706,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listIdentityProviderGroupsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "IdentityProviderGroupSummary[]",
+                    bodyModel: model.IdentityProviderGroupSummary,
+                    type: "Array<model.IdentityProviderGroupSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24318,6 +27735,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listIdentityProviderGroupsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.IdentityProviderGroupSummary objects
      * contained in responses from the listIdentityProviderGroups operation. This iterator will fetch more data from the
      * server as needed.
@@ -24328,12 +27746,32 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listIdentityProviderGroups(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listIdentityProviderGroupsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listIdentityProviderGroups operation. This iterator
      * will fetch more data from the server as needed.
      *
      * @param request a request which can be sent to the service operation
      */
     listAllIdentityProviderGroupsResponses(request) {
+        return oci_common_1.paginateResponses(request, req => this.listIdentityProviderGroups(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the models.IdentityProviderGroupSummary objects
+     * contained in responses from the listIdentityProviderGroups operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listIdentityProviderGroupsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listIdentityProviderGroups(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listIdentityProviderGroups operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listIdentityProviderGroupsResponseIterator(request) {
         return oci_common_1.paginateResponses(request, req => this.listIdentityProviderGroups(req));
     }
     /**
@@ -24345,7 +27783,7 @@ class IdentityClient {
      * @param ListIdentityProvidersRequest
      * @return ListIdentityProvidersResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListIdentityProviders.ts.html |here} to see how to use ListIdentityProviders API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListIdentityProviders.ts.html |here} to see how to use ListIdentityProviders API.
      */
     listIdentityProviders(listIdentityProvidersRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24365,6 +27803,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listIdentityProvidersRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24374,16 +27815,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listIdentityProvidersRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "IdentityProvider[]",
+                    bodyModel: model.IdentityProvider,
+                    type: "Array<model.IdentityProvider>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24405,6 +27844,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listIdentityProvidersRecordIterator function.
      * Creates a new async iterator which will iterate over the models.IdentityProvider objects
      * contained in responses from the listIdentityProviders operation. This iterator will fetch more data from the
      * server as needed.
@@ -24415,6 +27855,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listIdentityProviders(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listIdentityProvidersResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listIdentityProviders operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -24424,12 +27865,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listIdentityProviders(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.IdentityProvider objects
+     * contained in responses from the listIdentityProviders operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listIdentityProvidersRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listIdentityProviders(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listIdentityProviders operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listIdentityProvidersResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listIdentityProviders(req));
+    }
+    /**
      * Lists the group mappings for the specified identity provider.
      *
      * @param ListIdpGroupMappingsRequest
      * @return ListIdpGroupMappingsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListIdpGroupMappings.ts.html |here} to see how to use ListIdpGroupMappings API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListIdpGroupMappings.ts.html |here} to see how to use ListIdpGroupMappings API.
      */
     listIdpGroupMappings(listIdpGroupMappingsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24445,6 +27905,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listIdpGroupMappingsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24454,16 +27917,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listIdpGroupMappingsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "IdpGroupMapping[]",
+                    bodyModel: model.IdpGroupMapping,
+                    type: "Array<model.IdpGroupMapping>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24485,6 +27946,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listIdpGroupMappingsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.IdpGroupMapping objects
      * contained in responses from the listIdpGroupMappings operation. This iterator will fetch more data from the
      * server as needed.
@@ -24495,6 +27957,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listIdpGroupMappings(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listIdpGroupMappingsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listIdpGroupMappings operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -24504,13 +27967,32 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listIdpGroupMappings(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.IdpGroupMapping objects
+     * contained in responses from the listIdpGroupMappings operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listIdpGroupMappingsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listIdpGroupMappings(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listIdpGroupMappings operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listIdpGroupMappingsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listIdpGroupMappings(req));
+    }
+    /**
      * Lists the MFA TOTP devices for the specified user. The returned object contains the device's OCID, but not
      * the seed. The seed is returned only upon creation or when the IAM service regenerates the MFA seed for the device.
      *
      * @param ListMfaTotpDevicesRequest
      * @return ListMfaTotpDevicesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListMfaTotpDevices.ts.html |here} to see how to use ListMfaTotpDevices API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListMfaTotpDevices.ts.html |here} to see how to use ListMfaTotpDevices API.
      */
     listMfaTotpDevices(listMfaTotpDevicesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24528,6 +28010,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listMfaTotpDevicesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24537,16 +28022,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listMfaTotpDevicesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "MfaTotpDeviceSummary[]",
+                    bodyModel: model.MfaTotpDeviceSummary,
+                    type: "Array<model.MfaTotpDeviceSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24568,6 +28051,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listMfaTotpDevicesRecordIterator function.
      * Creates a new async iterator which will iterate over the models.MfaTotpDeviceSummary objects
      * contained in responses from the listMfaTotpDevices operation. This iterator will fetch more data from the
      * server as needed.
@@ -24578,12 +28062,32 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listMfaTotpDevices(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listMfaTotpDevicesResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listMfaTotpDevices operation. This iterator
      * will fetch more data from the server as needed.
      *
      * @param request a request which can be sent to the service operation
      */
     listAllMfaTotpDevicesResponses(request) {
+        return oci_common_1.paginateResponses(request, req => this.listMfaTotpDevices(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the models.MfaTotpDeviceSummary objects
+     * contained in responses from the listMfaTotpDevices operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listMfaTotpDevicesRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listMfaTotpDevices(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listMfaTotpDevices operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listMfaTotpDevicesResponseIterator(request) {
         return oci_common_1.paginateResponses(request, req => this.listMfaTotpDevices(req));
     }
     /**
@@ -24594,7 +28098,7 @@ class IdentityClient {
      * @param ListNetworkSourcesRequest
      * @return ListNetworkSourcesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListNetworkSources.ts.html |here} to see how to use ListNetworkSources API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListNetworkSources.ts.html |here} to see how to use ListNetworkSources API.
      */
     listNetworkSources(listNetworkSourcesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24613,6 +28117,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listNetworkSourcesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24622,16 +28129,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listNetworkSourcesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "NetworkSourcesSummary[]",
+                    bodyModel: model.NetworkSourcesSummary,
+                    type: "Array<model.NetworkSourcesSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24653,6 +28158,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listNetworkSourcesRecordIterator function.
      * Creates a new async iterator which will iterate over the models.NetworkSourcesSummary objects
      * contained in responses from the listNetworkSources operation. This iterator will fetch more data from the
      * server as needed.
@@ -24663,6 +28169,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listNetworkSources(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listNetworkSourcesResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listNetworkSources operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -24672,12 +28179,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listNetworkSources(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.NetworkSourcesSummary objects
+     * contained in responses from the listNetworkSources operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listNetworkSourcesRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listNetworkSources(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listNetworkSources operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listNetworkSourcesResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listNetworkSources(req));
+    }
+    /**
      * List of Oauth tokens for the user
      *
      * @param ListOAuthClientCredentialsRequest
      * @return ListOAuthClientCredentialsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListOAuthClientCredentials.ts.html |here} to see how to use ListOAuthClientCredentials API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListOAuthClientCredentials.ts.html |here} to see how to use ListOAuthClientCredentials API.
      */
     listOAuthClientCredentials(listOAuthClientCredentialsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24694,6 +28220,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listOAuthClientCredentialsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24703,16 +28232,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listOAuthClientCredentialsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "OAuth2ClientCredentialSummary[]",
+                    bodyModel: model.OAuth2ClientCredentialSummary,
+                    type: "Array<model.OAuth2ClientCredentialSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24734,6 +28261,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listOAuthClientCredentialsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.OAuth2ClientCredentialSummary objects
      * contained in responses from the listOAuthClientCredentials operation. This iterator will fetch more data from the
      * server as needed.
@@ -24744,12 +28272,32 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listOAuthClientCredentials(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listOAuthClientCredentialsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listOAuthClientCredentials operation. This iterator
      * will fetch more data from the server as needed.
      *
      * @param request a request which can be sent to the service operation
      */
     listAllOAuthClientCredentialsResponses(request) {
+        return oci_common_1.paginateResponses(request, req => this.listOAuthClientCredentials(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the models.OAuth2ClientCredentialSummary objects
+     * contained in responses from the listOAuthClientCredentials operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listOAuthClientCredentialsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listOAuthClientCredentials(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listOAuthClientCredentials operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listOAuthClientCredentialsResponseIterator(request) {
         return oci_common_1.paginateResponses(request, req => this.listOAuthClientCredentials(req));
     }
     /**
@@ -24762,7 +28310,7 @@ class IdentityClient {
        * @param ListPoliciesRequest
        * @return ListPoliciesResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListPolicies.ts.html |here} to see how to use ListPolicies API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListPolicies.ts.html |here} to see how to use ListPolicies API.
        */
     listPolicies(listPoliciesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24781,6 +28329,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listPoliciesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24790,16 +28341,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listPoliciesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "Policy[]",
+                    bodyModel: model.Policy,
+                    type: "Array<model.Policy>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24821,6 +28370,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listPoliciesRecordIterator function.
      * Creates a new async iterator which will iterate over the models.Policy objects
      * contained in responses from the listPolicies operation. This iterator will fetch more data from the
      * server as needed.
@@ -24831,6 +28381,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listPolicies(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listPoliciesResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listPolicies operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -24840,11 +28391,30 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listPolicies(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.Policy objects
+     * contained in responses from the listPolicies operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listPoliciesRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listPolicies(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listPolicies operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listPoliciesResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listPolicies(req));
+    }
+    /**
      * Lists the region subscriptions for the specified tenancy.
      * @param ListRegionSubscriptionsRequest
      * @return ListRegionSubscriptionsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListRegionSubscriptions.ts.html |here} to see how to use ListRegionSubscriptions API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListRegionSubscriptions.ts.html |here} to see how to use ListRegionSubscriptions API.
      */
     listRegionSubscriptions(listRegionSubscriptionsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24857,6 +28427,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listRegionSubscriptionsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24866,16 +28439,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listRegionSubscriptionsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "RegionSubscription[]",
+                    bodyModel: model.RegionSubscription,
+                    type: "Array<model.RegionSubscription>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24896,7 +28467,7 @@ class IdentityClient {
      * @param ListRegionsRequest
      * @return ListRegionsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListRegions.ts.html |here} to see how to use ListRegions API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListRegions.ts.html |here} to see how to use ListRegions API.
      */
     listRegions(listRegionsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24907,6 +28478,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listRegionsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24916,16 +28490,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listRegionsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "Region[]",
+                    bodyModel: model.Region,
+                    type: "Array<model.Region>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -24948,7 +28520,7 @@ class IdentityClient {
      * @param ListSmtpCredentialsRequest
      * @return ListSmtpCredentialsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListSmtpCredentials.ts.html |here} to see how to use ListSmtpCredentials API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListSmtpCredentials.ts.html |here} to see how to use ListSmtpCredentials API.
      */
     listSmtpCredentials(listSmtpCredentialsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -24961,6 +28533,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listSmtpCredentialsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -24970,16 +28545,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listSmtpCredentialsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "SmtpCredentialSummary[]",
+                    bodyModel: model.SmtpCredentialSummary,
+                    type: "Array<model.SmtpCredentialSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25009,7 +28582,7 @@ class IdentityClient {
        * @param ListSwiftPasswordsRequest
        * @return ListSwiftPasswordsResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListSwiftPasswords.ts.html |here} to see how to use ListSwiftPasswords API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListSwiftPasswords.ts.html |here} to see how to use ListSwiftPasswords API.
        */
     listSwiftPasswords(listSwiftPasswordsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25022,6 +28595,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listSwiftPasswordsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25031,16 +28607,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listSwiftPasswordsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "SwiftPassword[]",
+                    bodyModel: model.SwiftPassword,
+                    type: "Array<model.SwiftPassword>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25067,7 +28641,7 @@ class IdentityClient {
      * @param ListTagDefaultsRequest
      * @return ListTagDefaultsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListTagDefaults.ts.html |here} to see how to use ListTagDefaults API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListTagDefaults.ts.html |here} to see how to use ListTagDefaults API.
      */
     listTagDefaults(listTagDefaultsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25085,6 +28659,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTagDefaultsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25094,16 +28671,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTagDefaultsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "TagDefaultSummary[]",
+                    bodyModel: model.TagDefaultSummary,
+                    type: "Array<model.TagDefaultSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25125,6 +28700,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listTagDefaultsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.TagDefaultSummary objects
      * contained in responses from the listTagDefaults operation. This iterator will fetch more data from the
      * server as needed.
@@ -25135,6 +28711,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listTagDefaults(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listTagDefaultsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listTagDefaults operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -25144,12 +28721,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listTagDefaults(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.TagDefaultSummary objects
+     * contained in responses from the listTagDefaults operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTagDefaultsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listTagDefaults(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listTagDefaults operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTagDefaultsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listTagDefaults(req));
+    }
+    /**
      * Lists the tag namespaces in the specified compartment.
      *
      * @param ListTagNamespacesRequest
      * @return ListTagNamespacesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListTagNamespaces.ts.html |here} to see how to use ListTagNamespaces API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListTagNamespaces.ts.html |here} to see how to use ListTagNamespaces API.
      */
     listTagNamespaces(listTagNamespacesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25166,6 +28762,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTagNamespacesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25175,16 +28774,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTagNamespacesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "TagNamespaceSummary[]",
+                    bodyModel: model.TagNamespaceSummary,
+                    type: "Array<model.TagNamespaceSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25206,6 +28803,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listTagNamespacesRecordIterator function.
      * Creates a new async iterator which will iterate over the models.TagNamespaceSummary objects
      * contained in responses from the listTagNamespaces operation. This iterator will fetch more data from the
      * server as needed.
@@ -25216,6 +28814,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listTagNamespaces(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listTagNamespacesResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listTagNamespaces operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -25225,12 +28824,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listTagNamespaces(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.TagNamespaceSummary objects
+     * contained in responses from the listTagNamespaces operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTagNamespacesRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listTagNamespaces(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listTagNamespaces operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTagNamespacesResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listTagNamespaces(req));
+    }
+    /**
      * Gets the errors for a work request.
      *
      * @param ListTaggingWorkRequestErrorsRequest
      * @return ListTaggingWorkRequestErrorsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListTaggingWorkRequestErrors.ts.html |here} to see how to use ListTaggingWorkRequestErrors API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListTaggingWorkRequestErrors.ts.html |here} to see how to use ListTaggingWorkRequestErrors API.
      */
     listTaggingWorkRequestErrors(listTaggingWorkRequestErrorsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25246,6 +28864,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTaggingWorkRequestErrorsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25255,16 +28876,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTaggingWorkRequestErrorsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "TaggingWorkRequestErrorSummary[]",
+                    bodyModel: model.TaggingWorkRequestErrorSummary,
+                    type: "Array<model.TaggingWorkRequestErrorSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25291,6 +28910,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listTaggingWorkRequestErrorsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.TaggingWorkRequestErrorSummary objects
      * contained in responses from the listTaggingWorkRequestErrors operation. This iterator will fetch more data from the
      * server as needed.
@@ -25301,6 +28921,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listTaggingWorkRequestErrors(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listTaggingWorkRequestErrorsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listTaggingWorkRequestErrors operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -25310,12 +28931,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listTaggingWorkRequestErrors(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.TaggingWorkRequestErrorSummary objects
+     * contained in responses from the listTaggingWorkRequestErrors operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTaggingWorkRequestErrorsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listTaggingWorkRequestErrors(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listTaggingWorkRequestErrors operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTaggingWorkRequestErrorsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listTaggingWorkRequestErrors(req));
+    }
+    /**
      * Gets the logs for a work request.
      *
      * @param ListTaggingWorkRequestLogsRequest
      * @return ListTaggingWorkRequestLogsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListTaggingWorkRequestLogs.ts.html |here} to see how to use ListTaggingWorkRequestLogs API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListTaggingWorkRequestLogs.ts.html |here} to see how to use ListTaggingWorkRequestLogs API.
      */
     listTaggingWorkRequestLogs(listTaggingWorkRequestLogsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25331,6 +28971,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTaggingWorkRequestLogsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25340,16 +28983,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTaggingWorkRequestLogsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "TaggingWorkRequestLogSummary[]",
+                    bodyModel: model.TaggingWorkRequestLogSummary,
+                    type: "Array<model.TaggingWorkRequestLogSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25376,6 +29017,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listTaggingWorkRequestLogsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.TaggingWorkRequestLogSummary objects
      * contained in responses from the listTaggingWorkRequestLogs operation. This iterator will fetch more data from the
      * server as needed.
@@ -25386,6 +29028,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listTaggingWorkRequestLogs(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listTaggingWorkRequestLogsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listTaggingWorkRequestLogs operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -25395,12 +29038,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listTaggingWorkRequestLogs(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.TaggingWorkRequestLogSummary objects
+     * contained in responses from the listTaggingWorkRequestLogs operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTaggingWorkRequestLogsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listTaggingWorkRequestLogs(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listTaggingWorkRequestLogs operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTaggingWorkRequestLogsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listTaggingWorkRequestLogs(req));
+    }
+    /**
      * Lists the tagging work requests in compartment.
      *
      * @param ListTaggingWorkRequestsRequest
      * @return ListTaggingWorkRequestsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListTaggingWorkRequests.ts.html |here} to see how to use ListTaggingWorkRequests API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListTaggingWorkRequests.ts.html |here} to see how to use ListTaggingWorkRequests API.
      */
     listTaggingWorkRequests(listTaggingWorkRequestsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25416,6 +29078,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTaggingWorkRequestsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25425,16 +29090,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTaggingWorkRequestsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "TaggingWorkRequestSummary[]",
+                    bodyModel: model.TaggingWorkRequestSummary,
+                    type: "Array<model.TaggingWorkRequestSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25456,6 +29119,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listTaggingWorkRequestsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.TaggingWorkRequestSummary objects
      * contained in responses from the listTaggingWorkRequests operation. This iterator will fetch more data from the
      * server as needed.
@@ -25466,6 +29130,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listTaggingWorkRequests(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listTaggingWorkRequestsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listTaggingWorkRequests operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -25475,12 +29140,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listTaggingWorkRequests(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.TaggingWorkRequestSummary objects
+     * contained in responses from the listTaggingWorkRequests operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTaggingWorkRequestsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listTaggingWorkRequests(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listTaggingWorkRequests operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTaggingWorkRequestsResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listTaggingWorkRequests(req));
+    }
+    /**
      * Lists the tag definitions in the specified tag namespace.
      *
      * @param ListTagsRequest
      * @return ListTagsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListTags.ts.html |here} to see how to use ListTags API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListTags.ts.html |here} to see how to use ListTags API.
      */
     listTags(listTagsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25497,6 +29181,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTagsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25506,16 +29193,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listTagsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "TagSummary[]",
+                    bodyModel: model.TagSummary,
+                    type: "Array<model.TagSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25537,6 +29222,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listTagsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.TagSummary objects
      * contained in responses from the listTags operation. This iterator will fetch more data from the
      * server as needed.
@@ -25547,12 +29233,32 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listTags(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listTagsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listTags operation. This iterator
      * will fetch more data from the server as needed.
      *
      * @param request a request which can be sent to the service operation
      */
     listAllTagsResponses(request) {
+        return oci_common_1.paginateResponses(request, req => this.listTags(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the models.TagSummary objects
+     * contained in responses from the listTags operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTagsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listTags(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listTags operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listTagsResponseIterator(request) {
         return oci_common_1.paginateResponses(request, req => this.listTags(req));
     }
     /**
@@ -25570,7 +29276,7 @@ class IdentityClient {
        * @param ListUserGroupMembershipsRequest
        * @return ListUserGroupMembershipsResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListUserGroupMemberships.ts.html |here} to see how to use ListUserGroupMemberships API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListUserGroupMemberships.ts.html |here} to see how to use ListUserGroupMemberships API.
        */
     listUserGroupMemberships(listUserGroupMembershipsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25587,6 +29293,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listUserGroupMembershipsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25596,16 +29305,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listUserGroupMembershipsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "UserGroupMembership[]",
+                    bodyModel: model.UserGroupMembership,
+                    type: "Array<model.UserGroupMembership>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25627,6 +29334,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listUserGroupMembershipsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.UserGroupMembership objects
      * contained in responses from the listUserGroupMemberships operation. This iterator will fetch more data from the
      * server as needed.
@@ -25637,12 +29345,32 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listUserGroupMemberships(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listUserGroupMembershipsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listUserGroupMemberships operation. This iterator
      * will fetch more data from the server as needed.
      *
      * @param request a request which can be sent to the service operation
      */
     listAllUserGroupMembershipsResponses(request) {
+        return oci_common_1.paginateResponses(request, req => this.listUserGroupMemberships(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the models.UserGroupMembership objects
+     * contained in responses from the listUserGroupMemberships operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listUserGroupMembershipsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listUserGroupMemberships(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listUserGroupMemberships operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listUserGroupMembershipsResponseIterator(request) {
         return oci_common_1.paginateResponses(request, req => this.listUserGroupMemberships(req));
     }
     /**
@@ -25653,7 +29381,7 @@ class IdentityClient {
      * @param ListUsersRequest
      * @return ListUsersResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListUsers.ts.html |here} to see how to use ListUsers API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListUsers.ts.html |here} to see how to use ListUsers API.
      */
     listUsers(listUsersRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25674,6 +29402,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listUsersRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25683,16 +29414,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listUsersRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "User[]",
+                    bodyModel: model.User,
+                    type: "Array<model.User>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25714,6 +29443,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listUsersRecordIterator function.
      * Creates a new async iterator which will iterate over the models.User objects
      * contained in responses from the listUsers operation. This iterator will fetch more data from the
      * server as needed.
@@ -25724,6 +29454,7 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listUsers(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listUsersResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listUsers operation. This iterator
      * will fetch more data from the server as needed.
      *
@@ -25733,12 +29464,31 @@ class IdentityClient {
         return oci_common_1.paginateResponses(request, req => this.listUsers(req));
     }
     /**
+     * Creates a new async iterator which will iterate over the models.User objects
+     * contained in responses from the listUsers operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listUsersRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listUsers(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listUsers operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listUsersResponseIterator(request) {
+        return oci_common_1.paginateResponses(request, req => this.listUsers(req));
+    }
+    /**
      * Lists the work requests in compartment.
      *
      * @param ListWorkRequestsRequest
      * @return ListWorkRequestsResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ListWorkRequests.ts.html |here} to see how to use ListWorkRequests API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ListWorkRequests.ts.html |here} to see how to use ListWorkRequests API.
      */
     listWorkRequests(listWorkRequestsRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25754,6 +29504,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listWorkRequestsRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25763,16 +29516,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, listWorkRequestsRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "items",
-                    bodyModel: "WorkRequestSummary[]",
+                    bodyModel: model.WorkRequestSummary,
+                    type: "Array<model.WorkRequestSummary>",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25794,6 +29545,7 @@ class IdentityClient {
         });
     }
     /**
+     * NOTE: This function is deprecated in favor of listWorkRequestsRecordIterator function.
      * Creates a new async iterator which will iterate over the models.WorkRequestSummary objects
      * contained in responses from the listWorkRequests operation. This iterator will fetch more data from the
      * server as needed.
@@ -25804,12 +29556,32 @@ class IdentityClient {
         return oci_common_1.paginateRecords(request, req => this.listWorkRequests(req));
     }
     /**
+     * NOTE: This function is deprecated in favor of listWorkRequestsResponseIterator function.
      * Creates a new async iterator which will iterate over the responses received from the listWorkRequests operation. This iterator
      * will fetch more data from the server as needed.
      *
      * @param request a request which can be sent to the service operation
      */
     listAllWorkRequestsResponses(request) {
+        return oci_common_1.paginateResponses(request, req => this.listWorkRequests(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the models.WorkRequestSummary objects
+     * contained in responses from the listWorkRequests operation. This iterator will fetch more data from the
+     * server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listWorkRequestsRecordIterator(request) {
+        return oci_common_1.paginateRecords(request, req => this.listWorkRequests(req));
+    }
+    /**
+     * Creates a new async iterator which will iterate over the responses received from the listWorkRequests operation. This iterator
+     * will fetch more data from the server as needed.
+     *
+     * @param request a request which can be sent to the service operation
+     */
+    listWorkRequestsResponseIterator(request) {
         return oci_common_1.paginateResponses(request, req => this.listWorkRequests(req));
     }
     /**
@@ -25825,7 +29597,7 @@ class IdentityClient {
      * @param MoveCompartmentRequest
      * @return MoveCompartmentResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/MoveCompartment.ts.html |here} to see how to use MoveCompartment API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/MoveCompartment.ts.html |here} to see how to use MoveCompartment API.
      */
     moveCompartment(moveCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25841,19 +29613,19 @@ class IdentityClient {
                 "opc-request-id": moveCompartmentRequest.opcRequestId,
                 "opc-retry-token": moveCompartmentRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, moveCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/compartments/{compartmentId}/actions/moveCompartment",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(moveCompartmentRequest.moveCompartmentDetails, "MoveCompartmentDetails", models.MoveCompartmentDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(moveCompartmentRequest.moveCompartmentDetails, "MoveCompartmentDetails", model.MoveCompartmentDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, moveCompartmentRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -25884,7 +29656,7 @@ class IdentityClient {
      * @param RecoverCompartmentRequest
      * @return RecoverCompartmentResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/RecoverCompartment.ts.html |here} to see how to use RecoverCompartment API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/RecoverCompartment.ts.html |here} to see how to use RecoverCompartment API.
      */
     recoverCompartment(recoverCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25899,6 +29671,9 @@ class IdentityClient {
                 "if-match": recoverCompartmentRequest.ifMatch,
                 "opc-request-id": recoverCompartmentRequest.opcRequestId
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, recoverCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25908,16 +29683,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, recoverCompartmentRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "compartment",
-                    bodyModel: "model.Compartment",
+                    bodyModel: model.Compartment,
+                    type: "model.Compartment",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -25943,7 +29716,7 @@ class IdentityClient {
      * @param RemoveUserFromGroupRequest
      * @return RemoveUserFromGroupResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/RemoveUserFromGroup.ts.html |here} to see how to use RemoveUserFromGroup API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/RemoveUserFromGroup.ts.html |here} to see how to use RemoveUserFromGroup API.
      */
     removeUserFromGroup(removeUserFromGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -25957,6 +29730,9 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": removeUserFromGroupRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, removeUserFromGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -25966,9 +29742,6 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, removeUserFromGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
@@ -25994,7 +29767,7 @@ class IdentityClient {
      * @param ResetIdpScimClientRequest
      * @return ResetIdpScimClientResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/ResetIdpScimClient.ts.html |here} to see how to use ResetIdpScimClient API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/ResetIdpScimClient.ts.html |here} to see how to use ResetIdpScimClient API.
      */
     resetIdpScimClient(resetIdpScimClientRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26007,6 +29780,9 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, resetIdpScimClientRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
@@ -26016,16 +29792,14 @@ class IdentityClient {
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, resetIdpScimClientRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "scimClientCredentials",
-                    bodyModel: "model.ScimClientCredentials",
+                    bodyModel: model.ScimClientCredentials,
+                    type: "model.ScimClientCredentials",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26047,7 +29821,7 @@ class IdentityClient {
      * @param UpdateAuthTokenRequest
      * @return UpdateAuthTokenResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateAuthToken.ts.html |here} to see how to use UpdateAuthToken API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateAuthToken.ts.html |here} to see how to use UpdateAuthToken API.
      */
     updateAuthToken(updateAuthTokenRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26062,26 +29836,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateAuthTokenRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateAuthTokenRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/authTokens/{authTokenId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateAuthTokenRequest.updateAuthTokenDetails, "UpdateAuthTokenDetails", models.UpdateAuthTokenDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateAuthTokenRequest.updateAuthTokenDetails, "UpdateAuthTokenDetails", model.UpdateAuthTokenDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateAuthTokenRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "authToken",
-                    bodyModel: "model.AuthToken",
+                    bodyModel: model.AuthToken,
+                    type: "model.AuthToken",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26108,7 +29883,7 @@ class IdentityClient {
      * @param UpdateAuthenticationPolicyRequest
      * @return UpdateAuthenticationPolicyResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateAuthenticationPolicy.ts.html |here} to see how to use UpdateAuthenticationPolicy API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateAuthenticationPolicy.ts.html |here} to see how to use UpdateAuthenticationPolicy API.
      */
     updateAuthenticationPolicy(updateAuthenticationPolicyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26122,26 +29897,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateAuthenticationPolicyRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateAuthenticationPolicyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/authenticationPolicies/{compartmentId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateAuthenticationPolicyRequest.updateAuthenticationPolicyDetails, "UpdateAuthenticationPolicyDetails", models.UpdateAuthenticationPolicyDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateAuthenticationPolicyRequest.updateAuthenticationPolicyDetails, "UpdateAuthenticationPolicyDetails", model.UpdateAuthenticationPolicyDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateAuthenticationPolicyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "authenticationPolicy",
-                    bodyModel: "model.AuthenticationPolicy",
+                    bodyModel: model.AuthenticationPolicy,
+                    type: "model.AuthenticationPolicy",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26167,7 +29943,7 @@ class IdentityClient {
      * @param UpdateCompartmentRequest
      * @return UpdateCompartmentResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateCompartment.ts.html |here} to see how to use UpdateCompartment API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateCompartment.ts.html |here} to see how to use UpdateCompartment API.
      */
     updateCompartment(updateCompartmentRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26181,26 +29957,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateCompartmentRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateCompartmentRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/compartments/{compartmentId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateCompartmentRequest.updateCompartmentDetails, "UpdateCompartmentDetails", models.UpdateCompartmentDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateCompartmentRequest.updateCompartmentDetails, "UpdateCompartmentDetails", model.UpdateCompartmentDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateCompartmentRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "compartment",
-                    bodyModel: "model.Compartment",
+                    bodyModel: model.Compartment,
+                    type: "model.Compartment",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26227,7 +30004,7 @@ class IdentityClient {
      * @param UpdateCustomerSecretKeyRequest
      * @return UpdateCustomerSecretKeyResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateCustomerSecretKey.ts.html |here} to see how to use UpdateCustomerSecretKey API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateCustomerSecretKey.ts.html |here} to see how to use UpdateCustomerSecretKey API.
      */
     updateCustomerSecretKey(updateCustomerSecretKeyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26242,26 +30019,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateCustomerSecretKeyRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateCustomerSecretKeyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/customerSecretKeys/{customerSecretKeyId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateCustomerSecretKeyRequest.updateCustomerSecretKeyDetails, "UpdateCustomerSecretKeyDetails", models.UpdateCustomerSecretKeyDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateCustomerSecretKeyRequest.updateCustomerSecretKeyDetails, "UpdateCustomerSecretKeyDetails", model.UpdateCustomerSecretKeyDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateCustomerSecretKeyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "customerSecretKeySummary",
-                    bodyModel: "model.CustomerSecretKeySummary",
+                    bodyModel: model.CustomerSecretKeySummary,
+                    type: "model.CustomerSecretKeySummary",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26287,7 +30065,7 @@ class IdentityClient {
      * @param UpdateDynamicGroupRequest
      * @return UpdateDynamicGroupResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateDynamicGroup.ts.html |here} to see how to use UpdateDynamicGroup API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateDynamicGroup.ts.html |here} to see how to use UpdateDynamicGroup API.
      */
     updateDynamicGroup(updateDynamicGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26301,26 +30079,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateDynamicGroupRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateDynamicGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/dynamicGroups/{dynamicGroupId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateDynamicGroupRequest.updateDynamicGroupDetails, "UpdateDynamicGroupDetails", models.UpdateDynamicGroupDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateDynamicGroupRequest.updateDynamicGroupDetails, "UpdateDynamicGroupDetails", model.UpdateDynamicGroupDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateDynamicGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "dynamicGroup",
-                    bodyModel: "model.DynamicGroup",
+                    bodyModel: model.DynamicGroup,
+                    type: "model.DynamicGroup",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26346,7 +30125,7 @@ class IdentityClient {
      * @param UpdateGroupRequest
      * @return UpdateGroupResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateGroup.ts.html |here} to see how to use UpdateGroup API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateGroup.ts.html |here} to see how to use UpdateGroup API.
      */
     updateGroup(updateGroupRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26360,26 +30139,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateGroupRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateGroupRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/groups/{groupId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateGroupRequest.updateGroupDetails, "UpdateGroupDetails", models.UpdateGroupDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateGroupRequest.updateGroupDetails, "UpdateGroupDetails", model.UpdateGroupDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateGroupRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "group",
-                    bodyModel: "model.Group",
+                    bodyModel: model.Group,
+                    type: "model.Group",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26405,7 +30185,7 @@ class IdentityClient {
      * @param UpdateIdentityProviderRequest
      * @return UpdateIdentityProviderResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateIdentityProvider.ts.html |here} to see how to use UpdateIdentityProvider API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateIdentityProvider.ts.html |here} to see how to use UpdateIdentityProvider API.
      */
     updateIdentityProvider(updateIdentityProviderRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26419,26 +30199,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateIdentityProviderRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateIdentityProviderRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/identityProviders/{identityProviderId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateIdentityProviderRequest.updateIdentityProviderDetails, "UpdateIdentityProviderDetails", models.UpdateIdentityProviderDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateIdentityProviderRequest.updateIdentityProviderDetails, "UpdateIdentityProviderDetails", model.UpdateIdentityProviderDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateIdentityProviderRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "identityProvider",
-                    bodyModel: "model.IdentityProvider",
+                    bodyModel: model.IdentityProvider,
+                    type: "model.IdentityProvider",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26464,7 +30245,7 @@ class IdentityClient {
      * @param UpdateIdpGroupMappingRequest
      * @return UpdateIdpGroupMappingResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateIdpGroupMapping.ts.html |here} to see how to use UpdateIdpGroupMapping API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateIdpGroupMapping.ts.html |here} to see how to use UpdateIdpGroupMapping API.
      */
     updateIdpGroupMapping(updateIdpGroupMappingRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26479,26 +30260,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateIdpGroupMappingRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateIdpGroupMappingRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/identityProviders/{identityProviderId}/groupMappings/{mappingId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateIdpGroupMappingRequest.updateIdpGroupMappingDetails, "UpdateIdpGroupMappingDetails", models.UpdateIdpGroupMappingDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateIdpGroupMappingRequest.updateIdpGroupMappingDetails, "UpdateIdpGroupMappingDetails", model.UpdateIdpGroupMappingDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateIdpGroupMappingRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "idpGroupMapping",
-                    bodyModel: "model.IdpGroupMapping",
+                    bodyModel: model.IdpGroupMapping,
+                    type: "model.IdpGroupMapping",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26524,7 +30306,7 @@ class IdentityClient {
      * @param UpdateNetworkSourceRequest
      * @return UpdateNetworkSourceResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateNetworkSource.ts.html |here} to see how to use UpdateNetworkSource API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateNetworkSource.ts.html |here} to see how to use UpdateNetworkSource API.
      */
     updateNetworkSource(updateNetworkSourceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26538,26 +30320,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateNetworkSourceRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateNetworkSourceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/networkSources/{networkSourceId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateNetworkSourceRequest.updateNetworkSourceDetails, "UpdateNetworkSourceDetails", models.UpdateNetworkSourceDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateNetworkSourceRequest.updateNetworkSourceDetails, "UpdateNetworkSourceDetails", model.UpdateNetworkSourceDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateNetworkSourceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "networkSources",
-                    bodyModel: "model.NetworkSources",
+                    bodyModel: model.NetworkSources,
+                    type: "model.NetworkSources",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26584,7 +30367,7 @@ class IdentityClient {
      * @param UpdateOAuthClientCredentialRequest
      * @return UpdateOAuthClientCredentialResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateOAuthClientCredential.ts.html |here} to see how to use UpdateOAuthClientCredential API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateOAuthClientCredential.ts.html |here} to see how to use UpdateOAuthClientCredential API.
      */
     updateOAuthClientCredential(updateOAuthClientCredentialRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26599,26 +30382,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateOAuthClientCredentialRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateOAuthClientCredentialRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/oauth2ClientCredentials/{oauth2ClientCredentialId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateOAuthClientCredentialRequest.updateOAuth2ClientCredentialDetails, "UpdateOAuth2ClientCredentialDetails", models.UpdateOAuth2ClientCredentialDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateOAuthClientCredentialRequest.updateOAuth2ClientCredentialDetails, "UpdateOAuth2ClientCredentialDetails", model.UpdateOAuth2ClientCredentialDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateOAuthClientCredentialRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "oAuth2ClientCredential",
-                    bodyModel: "model.OAuth2ClientCredential",
+                    bodyModel: model.OAuth2ClientCredential,
+                    type: "model.OAuth2ClientCredential",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26647,7 +30431,7 @@ class IdentityClient {
        * @param UpdatePolicyRequest
        * @return UpdatePolicyResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdatePolicy.ts.html |here} to see how to use UpdatePolicy API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdatePolicy.ts.html |here} to see how to use UpdatePolicy API.
        */
     updatePolicy(updatePolicyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26661,26 +30445,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updatePolicyRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updatePolicyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/policies/{policyId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updatePolicyRequest.updatePolicyDetails, "UpdatePolicyDetails", models.UpdatePolicyDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updatePolicyRequest.updatePolicyDetails, "UpdatePolicyDetails", model.UpdatePolicyDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updatePolicyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "policy",
-                    bodyModel: "model.Policy",
+                    bodyModel: model.Policy,
+                    type: "model.Policy",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26707,7 +30492,7 @@ class IdentityClient {
      * @param UpdateSmtpCredentialRequest
      * @return UpdateSmtpCredentialResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateSmtpCredential.ts.html |here} to see how to use UpdateSmtpCredential API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateSmtpCredential.ts.html |here} to see how to use UpdateSmtpCredential API.
      */
     updateSmtpCredential(updateSmtpCredentialRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26722,26 +30507,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateSmtpCredentialRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateSmtpCredentialRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/smtpCredentials/{smtpCredentialId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateSmtpCredentialRequest.updateSmtpCredentialDetails, "UpdateSmtpCredentialDetails", models.UpdateSmtpCredentialDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateSmtpCredentialRequest.updateSmtpCredentialDetails, "UpdateSmtpCredentialDetails", model.UpdateSmtpCredentialDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateSmtpCredentialRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "smtpCredentialSummary",
-                    bodyModel: "model.SmtpCredentialSummary",
+                    bodyModel: model.SmtpCredentialSummary,
+                    type: "model.SmtpCredentialSummary",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26770,7 +30556,7 @@ class IdentityClient {
        * @param UpdateSwiftPasswordRequest
        * @return UpdateSwiftPasswordResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateSwiftPassword.ts.html |here} to see how to use UpdateSwiftPassword API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateSwiftPassword.ts.html |here} to see how to use UpdateSwiftPassword API.
        */
     updateSwiftPassword(updateSwiftPasswordRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26785,26 +30571,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateSwiftPasswordRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateSwiftPasswordRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/swiftPasswords/{swiftPasswordId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateSwiftPasswordRequest.updateSwiftPasswordDetails, "UpdateSwiftPasswordDetails", models.UpdateSwiftPasswordDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateSwiftPasswordRequest.updateSwiftPasswordDetails, "UpdateSwiftPasswordDetails", model.UpdateSwiftPasswordDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateSwiftPasswordRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "swiftPassword",
-                    bodyModel: "model.SwiftPassword",
+                    bodyModel: model.SwiftPassword,
+                    type: "model.SwiftPassword",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26840,7 +30627,7 @@ class IdentityClient {
        * @param UpdateTagRequest
        * @return UpdateTagResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateTag.ts.html |here} to see how to use UpdateTag API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateTag.ts.html |here} to see how to use UpdateTag API.
        */
     updateTag(updateTagRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26855,26 +30642,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateTagRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateTagRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tagNamespaces/{tagNamespaceId}/tags/{tagName}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateTagRequest.updateTagDetails, "UpdateTagDetails", models.UpdateTagDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateTagRequest.updateTagDetails, "UpdateTagDetails", model.UpdateTagDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateTagRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tag",
-                    bodyModel: "model.Tag",
+                    bodyModel: model.Tag,
+                    type: "model.Tag",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26906,7 +30694,7 @@ class IdentityClient {
      * @param UpdateTagDefaultRequest
      * @return UpdateTagDefaultResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateTagDefault.ts.html |here} to see how to use UpdateTagDefault API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateTagDefault.ts.html |here} to see how to use UpdateTagDefault API.
      */
     updateTagDefault(updateTagDefaultRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26921,26 +30709,27 @@ class IdentityClient {
                 "if-match": updateTagDefaultRequest.ifMatch,
                 "opc-request-id": updateTagDefaultRequest.opcRequestId
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateTagDefaultRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tagDefaults/{tagDefaultId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateTagDefaultRequest.updateTagDefaultDetails, "UpdateTagDefaultDetails", models.UpdateTagDefaultDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateTagDefaultRequest.updateTagDefaultDetails, "UpdateTagDefaultDetails", model.UpdateTagDefaultDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateTagDefaultRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tagDefault",
-                    bodyModel: "model.TagDefault",
+                    bodyModel: model.TagDefault,
+                    type: "model.TagDefault",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -26975,7 +30764,7 @@ class IdentityClient {
        * @param UpdateTagNamespaceRequest
        * @return UpdateTagNamespaceResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateTagNamespace.ts.html |here} to see how to use UpdateTagNamespace API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateTagNamespace.ts.html |here} to see how to use UpdateTagNamespace API.
        */
     updateTagNamespace(updateTagNamespaceRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26988,26 +30777,27 @@ class IdentityClient {
             let headerParams = {
                 "Content-Type": common.Constants.APPLICATION_JSON
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateTagNamespaceRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/tagNamespaces/{tagNamespaceId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateTagNamespaceRequest.updateTagNamespaceDetails, "UpdateTagNamespaceDetails", models.UpdateTagNamespaceDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateTagNamespaceRequest.updateTagNamespaceDetails, "UpdateTagNamespaceDetails", model.UpdateTagNamespaceDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateTagNamespaceRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "tagNamespace",
-                    bodyModel: "model.TagNamespace",
+                    bodyModel: model.TagNamespace,
+                    type: "model.TagNamespace",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -27028,7 +30818,7 @@ class IdentityClient {
      * @param UpdateUserRequest
      * @return UpdateUserResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateUser.ts.html |here} to see how to use UpdateUser API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateUser.ts.html |here} to see how to use UpdateUser API.
      */
     updateUser(updateUserRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -27042,26 +30832,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateUserRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateUserRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateUserRequest.updateUserDetails, "UpdateUserDetails", models.UpdateUserDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateUserRequest.updateUserDetails, "UpdateUserDetails", model.UpdateUserDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateUserRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "user",
-                    bodyModel: "model.User",
+                    bodyModel: model.User,
+                    type: "model.User",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -27088,7 +30879,7 @@ class IdentityClient {
      * @param UpdateUserCapabilitiesRequest
      * @return UpdateUserCapabilitiesResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateUserCapabilities.ts.html |here} to see how to use UpdateUserCapabilities API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateUserCapabilities.ts.html |here} to see how to use UpdateUserCapabilities API.
      */
     updateUserCapabilities(updateUserCapabilitiesRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -27102,26 +30893,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateUserCapabilitiesRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateUserCapabilitiesRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/capabilities",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateUserCapabilitiesRequest.updateUserCapabilitiesDetails, "UpdateUserCapabilitiesDetails", models.UpdateUserCapabilitiesDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateUserCapabilitiesRequest.updateUserCapabilitiesDetails, "UpdateUserCapabilitiesDetails", model.UpdateUserCapabilitiesDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateUserCapabilitiesRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "user",
-                    bodyModel: "model.User",
+                    bodyModel: model.User,
+                    type: "model.User",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -27148,7 +30940,7 @@ class IdentityClient {
      * @param UpdateUserStateRequest
      * @return UpdateUserStateResponse
      * @throws OciError when an error occurs
-     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UpdateUserState.ts.html |here} to see how to use UpdateUserState API.
+     * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UpdateUserState.ts.html |here} to see how to use UpdateUserState API.
      */
     updateUserState(updateUserStateRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -27162,26 +30954,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "if-match": updateUserStateRequest.ifMatch
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateUserStateRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/state",
                 method: "PUT",
-                bodyContent: common.ObjectSerializer.serialize(updateUserStateRequest.updateStateDetails, "UpdateStateDetails", models.UpdateStateDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(updateUserStateRequest.updateStateDetails, "UpdateStateDetails", model.UpdateStateDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, updateUserStateRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "user",
-                    bodyModel: "model.User",
+                    bodyModel: model.User,
+                    type: "model.User",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -27222,7 +31015,7 @@ class IdentityClient {
        * @param UploadApiKeyRequest
        * @return UploadApiKeyResponse
        * @throws OciError when an error occurs
-       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/1.19.3/identity/UploadApiKey.ts.html |here} to see how to use UploadApiKey API.
+       * @example Click {@link https://docs.cloud.oracle.com/en-us/iaas/tools/typescript-sdk-examples/2.5.0/identity/UploadApiKey.ts.html |here} to see how to use UploadApiKey API.
        */
     uploadApiKey(uploadApiKeyRequest) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -27236,26 +31029,27 @@ class IdentityClient {
                 "Content-Type": common.Constants.APPLICATION_JSON,
                 "opc-retry-token": uploadApiKeyRequest.opcRetryToken
             };
+            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, uploadApiKeyRequest.retryConfiguration);
+            if (this.logger)
+                retrier.logger = this.logger;
             const request = yield oci_common_2.composeRequest({
                 baseEndpoint: this._endpoint,
                 defaultHeaders: this._defaultHeaders,
                 path: "/users/{userId}/apiKeys",
                 method: "POST",
-                bodyContent: common.ObjectSerializer.serialize(uploadApiKeyRequest.createApiKeyDetails, "CreateApiKeyDetails", models.CreateApiKeyDetails.getJsonObj),
+                bodyContent: common.ObjectSerializer.serialize(uploadApiKeyRequest.createApiKeyDetails, "CreateApiKeyDetails", model.CreateApiKeyDetails.getJsonObj),
                 pathParams: pathParams,
                 headerParams: headerParams,
                 queryParams: queryParams
             });
-            const retrier = oci_common_2.GenericRetrier.createPreferredRetrier(this._clientConfiguration ? this._clientConfiguration.retryConfiguration : {}, uploadApiKeyRequest.retryConfiguration);
-            if (this.logger)
-                retrier.logger = this.logger;
             try {
                 const response = yield retrier.makeServiceCall(this._httpClient, request);
                 const sdkResponse = oci_common_2.composeResponse({
                     responseObject: {},
                     body: yield response.json(),
                     bodyKey: "apiKey",
-                    bodyModel: "model.ApiKey",
+                    bodyModel: model.ApiKey,
+                    type: "model.ApiKey",
                     responseHeaders: [
                         {
                             value: response.headers.get("opc-request-id"),
@@ -27523,6 +31317,11 @@ var AddUserToGroupDetails;
         return jsonObj;
     }
     AddUserToGroupDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    AddUserToGroupDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(AddUserToGroupDetails = exports.AddUserToGroupDetails || (exports.AddUserToGroupDetails = {}));
 //# sourceMappingURL=add-user-to-group-details.js.map
 
@@ -27567,6 +31366,11 @@ var ApiKey;
         return jsonObj;
     }
     ApiKey.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ApiKey.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ApiKey = exports.ApiKey || (exports.ApiKey = {}));
 //# sourceMappingURL=api-key.js.map
 
@@ -27611,6 +31415,11 @@ var AuthToken;
         return jsonObj;
     }
     AuthToken.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    AuthToken.getDeserializedJsonObj = getDeserializedJsonObj;
 })(AuthToken = exports.AuthToken || (exports.AuthToken = {}));
 //# sourceMappingURL=auth-token.js.map
 
@@ -27669,6 +31478,18 @@ var AuthenticationPolicy;
         return jsonObj;
     }
     AuthenticationPolicy.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "passwordPolicy": obj.passwordPolicy
+                ? model.PasswordPolicy.getDeserializedJsonObj(obj.passwordPolicy)
+                : undefined,
+            "networkPolicy": obj.networkPolicy
+                ? model.NetworkPolicy.getDeserializedJsonObj(obj.networkPolicy)
+                : undefined
+        });
+        return jsonObj;
+    }
+    AuthenticationPolicy.getDeserializedJsonObj = getDeserializedJsonObj;
 })(AuthenticationPolicy = exports.AuthenticationPolicy || (exports.AuthenticationPolicy = {}));
 //# sourceMappingURL=authentication-policy.js.map
 
@@ -27700,6 +31521,11 @@ var AvailabilityDomain;
         return jsonObj;
     }
     AvailabilityDomain.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    AvailabilityDomain.getDeserializedJsonObj = getDeserializedJsonObj;
 })(AvailabilityDomain = exports.AvailabilityDomain || (exports.AvailabilityDomain = {}));
 //# sourceMappingURL=availability-domain.js.map
 
@@ -27761,6 +31587,21 @@ var BaseTagDefinitionValidator;
         return jsonObj;
     }
     BaseTagDefinitionValidator.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("validatorType" in obj && obj.validatorType) {
+            switch (obj.validatorType) {
+                case "DEFAULT":
+                    return model.DefaultTagDefinitionValidator.getDeserializedJsonObj(jsonObj, true);
+                case "ENUM":
+                    return model.EnumTagDefinitionValidator.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.validatorType);
+            }
+        }
+        return jsonObj;
+    }
+    BaseTagDefinitionValidator.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BaseTagDefinitionValidator = exports.BaseTagDefinitionValidator || (exports.BaseTagDefinitionValidator = {}));
 //# sourceMappingURL=base-tag-definition-validator.js.map
 
@@ -27818,6 +31659,17 @@ var BulkActionResourceTypeCollection;
         return jsonObj;
     }
     BulkActionResourceTypeCollection.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.BulkActionResourceType.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    BulkActionResourceTypeCollection.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkActionResourceTypeCollection = exports.BulkActionResourceTypeCollection || (exports.BulkActionResourceTypeCollection = {}));
 //# sourceMappingURL=bulk-action-resource-type-collection.js.map
 
@@ -27849,6 +31701,11 @@ var BulkActionResourceType;
         return jsonObj;
     }
     BulkActionResourceType.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    BulkActionResourceType.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkActionResourceType = exports.BulkActionResourceType || (exports.BulkActionResourceType = {}));
 //# sourceMappingURL=bulk-action-resource-type.js.map
 
@@ -27880,6 +31737,11 @@ var BulkActionResource;
         return jsonObj;
     }
     BulkActionResource.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    BulkActionResource.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkActionResource = exports.BulkActionResource || (exports.BulkActionResource = {}));
 //# sourceMappingURL=bulk-action-resource.js.map
 
@@ -27937,6 +31799,17 @@ var BulkDeleteResourcesDetails;
         return jsonObj;
     }
     BulkDeleteResourcesDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "resources": obj.resources
+                ? obj.resources.map(item => {
+                    return model.BulkActionResource.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    BulkDeleteResourcesDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkDeleteResourcesDetails = exports.BulkDeleteResourcesDetails || (exports.BulkDeleteResourcesDetails = {}));
 //# sourceMappingURL=bulk-delete-resources-details.js.map
 
@@ -27968,6 +31841,11 @@ var BulkDeleteTagsDetails;
         return jsonObj;
     }
     BulkDeleteTagsDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    BulkDeleteTagsDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkDeleteTagsDetails = exports.BulkDeleteTagsDetails || (exports.BulkDeleteTagsDetails = {}));
 //# sourceMappingURL=bulk-delete-tags-details.js.map
 
@@ -28006,6 +31884,11 @@ var BulkEditOperationDetails;
         return jsonObj;
     }
     BulkEditOperationDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    BulkEditOperationDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkEditOperationDetails = exports.BulkEditOperationDetails || (exports.BulkEditOperationDetails = {}));
 //# sourceMappingURL=bulk-edit-operation-details.js.map
 
@@ -28037,6 +31920,11 @@ var BulkEditResource;
         return jsonObj;
     }
     BulkEditResource.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    BulkEditResource.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkEditResource = exports.BulkEditResource || (exports.BulkEditResource = {}));
 //# sourceMappingURL=bulk-edit-resource.js.map
 
@@ -28099,6 +31987,22 @@ var BulkEditTagsDetails;
         return jsonObj;
     }
     BulkEditTagsDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "resources": obj.resources
+                ? obj.resources.map(item => {
+                    return model.BulkEditResource.getDeserializedJsonObj(item);
+                })
+                : undefined,
+            "bulkEditOperations": obj.bulkEditOperations
+                ? obj.bulkEditOperations.map(item => {
+                    return model.BulkEditOperationDetails.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    BulkEditTagsDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkEditTagsDetails = exports.BulkEditTagsDetails || (exports.BulkEditTagsDetails = {}));
 //# sourceMappingURL=bulk-edit-tags-details.js.map
 
@@ -28156,6 +32060,17 @@ var BulkEditTagsResourceTypeCollection;
         return jsonObj;
     }
     BulkEditTagsResourceTypeCollection.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "items": obj.items
+                ? obj.items.map(item => {
+                    return model.BulkEditTagsResourceType.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    BulkEditTagsResourceTypeCollection.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkEditTagsResourceTypeCollection = exports.BulkEditTagsResourceTypeCollection || (exports.BulkEditTagsResourceTypeCollection = {}));
 //# sourceMappingURL=bulk-edit-tags-resource-type-collection.js.map
 
@@ -28187,12 +32102,17 @@ var BulkEditTagsResourceType;
         return jsonObj;
     }
     BulkEditTagsResourceType.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    BulkEditTagsResourceType.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkEditTagsResourceType = exports.BulkEditTagsResourceType || (exports.BulkEditTagsResourceType = {}));
 //# sourceMappingURL=bulk-edit-tags-resource-type.js.map
 
 /***/ }),
 
-/***/ 746:
+/***/ 9739:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -28244,6 +32164,17 @@ var BulkMoveResourcesDetails;
         return jsonObj;
     }
     BulkMoveResourcesDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "resources": obj.resources
+                ? obj.resources.map(item => {
+                    return model.BulkActionResource.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    BulkMoveResourcesDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(BulkMoveResourcesDetails = exports.BulkMoveResourcesDetails || (exports.BulkMoveResourcesDetails = {}));
 //# sourceMappingURL=bulk-move-resources-details.js.map
 
@@ -28275,6 +32206,11 @@ var ChangeTagNamespaceCompartmentDetail;
         return jsonObj;
     }
     ChangeTagNamespaceCompartmentDetail.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ChangeTagNamespaceCompartmentDetail.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ChangeTagNamespaceCompartmentDetail = exports.ChangeTagNamespaceCompartmentDetail || (exports.ChangeTagNamespaceCompartmentDetail = {}));
 //# sourceMappingURL=change-tag-namespace-compartment-detail.js.map
 
@@ -28319,6 +32255,11 @@ var Compartment;
         return jsonObj;
     }
     Compartment.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    Compartment.getDeserializedJsonObj = getDeserializedJsonObj;
 })(Compartment = exports.Compartment || (exports.Compartment = {}));
 //# sourceMappingURL=compartment.js.map
 
@@ -28350,6 +32291,11 @@ var CreateApiKeyDetails;
         return jsonObj;
     }
     CreateApiKeyDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateApiKeyDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateApiKeyDetails = exports.CreateApiKeyDetails || (exports.CreateApiKeyDetails = {}));
 //# sourceMappingURL=create-api-key-details.js.map
 
@@ -28381,6 +32327,11 @@ var CreateAuthTokenDetails;
         return jsonObj;
     }
     CreateAuthTokenDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateAuthTokenDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateAuthTokenDetails = exports.CreateAuthTokenDetails || (exports.CreateAuthTokenDetails = {}));
 //# sourceMappingURL=create-auth-token-details.js.map
 
@@ -28412,6 +32363,11 @@ var CreateCompartmentDetails;
         return jsonObj;
     }
     CreateCompartmentDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateCompartmentDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateCompartmentDetails = exports.CreateCompartmentDetails || (exports.CreateCompartmentDetails = {}));
 //# sourceMappingURL=create-compartment-details.js.map
 
@@ -28443,6 +32399,11 @@ var CreateCustomerSecretKeyDetails;
         return jsonObj;
     }
     CreateCustomerSecretKeyDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateCustomerSecretKeyDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateCustomerSecretKeyDetails = exports.CreateCustomerSecretKeyDetails || (exports.CreateCustomerSecretKeyDetails = {}));
 //# sourceMappingURL=create-customer-secret-key-details.js.map
 
@@ -28474,6 +32435,11 @@ var CreateDynamicGroupDetails;
         return jsonObj;
     }
     CreateDynamicGroupDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateDynamicGroupDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateDynamicGroupDetails = exports.CreateDynamicGroupDetails || (exports.CreateDynamicGroupDetails = {}));
 //# sourceMappingURL=create-dynamic-group-details.js.map
 
@@ -28505,6 +32471,11 @@ var CreateGroupDetails;
         return jsonObj;
     }
     CreateGroupDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateGroupDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateGroupDetails = exports.CreateGroupDetails || (exports.CreateGroupDetails = {}));
 //# sourceMappingURL=create-group-details.js.map
 
@@ -28569,6 +32540,19 @@ var CreateIdentityProviderDetails;
         return jsonObj;
     }
     CreateIdentityProviderDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("protocol" in obj && obj.protocol) {
+            switch (obj.protocol) {
+                case "SAML2":
+                    return model.CreateSaml2IdentityProviderDetails.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.protocol);
+            }
+        }
+        return jsonObj;
+    }
+    CreateIdentityProviderDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateIdentityProviderDetails = exports.CreateIdentityProviderDetails || (exports.CreateIdentityProviderDetails = {}));
 //# sourceMappingURL=create-identity-provider-details.js.map
 
@@ -28600,6 +32584,11 @@ var CreateIdpGroupMappingDetails;
         return jsonObj;
     }
     CreateIdpGroupMappingDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateIdpGroupMappingDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateIdpGroupMappingDetails = exports.CreateIdpGroupMappingDetails || (exports.CreateIdpGroupMappingDetails = {}));
 //# sourceMappingURL=create-idp-group-mapping-details.js.map
 
@@ -28657,6 +32646,17 @@ var CreateNetworkSourceDetails;
         return jsonObj;
     }
     CreateNetworkSourceDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "virtualSourceList": obj.virtualSourceList
+                ? obj.virtualSourceList.map(item => {
+                    return model.NetworkSourcesVirtualSourceList.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    CreateNetworkSourceDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateNetworkSourceDetails = exports.CreateNetworkSourceDetails || (exports.CreateNetworkSourceDetails = {}));
 //# sourceMappingURL=create-network-source-details.js.map
 
@@ -28714,6 +32714,17 @@ var CreateOAuth2ClientCredentialDetails;
         return jsonObj;
     }
     CreateOAuth2ClientCredentialDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "scopes": obj.scopes
+                ? obj.scopes.map(item => {
+                    return model.FullyQualifiedScope.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    CreateOAuth2ClientCredentialDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateOAuth2ClientCredentialDetails = exports.CreateOAuth2ClientCredentialDetails || (exports.CreateOAuth2ClientCredentialDetails = {}));
 //# sourceMappingURL=create-oauth2-client-credential-details.js.map
 
@@ -28745,6 +32756,11 @@ var CreatePolicyDetails;
         return jsonObj;
     }
     CreatePolicyDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreatePolicyDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreatePolicyDetails = exports.CreatePolicyDetails || (exports.CreatePolicyDetails = {}));
 //# sourceMappingURL=create-policy-details.js.map
 
@@ -28776,6 +32792,11 @@ var CreateRegionSubscriptionDetails;
         return jsonObj;
     }
     CreateRegionSubscriptionDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateRegionSubscriptionDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateRegionSubscriptionDetails = exports.CreateRegionSubscriptionDetails || (exports.CreateRegionSubscriptionDetails = {}));
 //# sourceMappingURL=create-region-subscription-details.js.map
 
@@ -28830,6 +32851,13 @@ var CreateSaml2IdentityProviderDetails;
     }
     CreateSaml2IdentityProviderDetails.getJsonObj = getJsonObj;
     CreateSaml2IdentityProviderDetails.protocol = "SAML2";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.CreateIdentityProviderDetails.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    CreateSaml2IdentityProviderDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateSaml2IdentityProviderDetails = exports.CreateSaml2IdentityProviderDetails || (exports.CreateSaml2IdentityProviderDetails = {}));
 //# sourceMappingURL=create-saml2-identity-provider-details.js.map
 
@@ -28861,6 +32889,11 @@ var CreateSmtpCredentialDetails;
         return jsonObj;
     }
     CreateSmtpCredentialDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateSmtpCredentialDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateSmtpCredentialDetails = exports.CreateSmtpCredentialDetails || (exports.CreateSmtpCredentialDetails = {}));
 //# sourceMappingURL=create-smtp-credential-details.js.map
 
@@ -28892,6 +32925,11 @@ var CreateSwiftPasswordDetails;
         return jsonObj;
     }
     CreateSwiftPasswordDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateSwiftPasswordDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateSwiftPasswordDetails = exports.CreateSwiftPasswordDetails || (exports.CreateSwiftPasswordDetails = {}));
 //# sourceMappingURL=create-swift-password-details.js.map
 
@@ -28923,6 +32961,11 @@ var CreateTagDefaultDetails;
         return jsonObj;
     }
     CreateTagDefaultDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateTagDefaultDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateTagDefaultDetails = exports.CreateTagDefaultDetails || (exports.CreateTagDefaultDetails = {}));
 //# sourceMappingURL=create-tag-default-details.js.map
 
@@ -28978,6 +33021,15 @@ var CreateTagDetails;
         return jsonObj;
     }
     CreateTagDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "validator": obj.validator
+                ? model.BaseTagDefinitionValidator.getDeserializedJsonObj(obj.validator)
+                : undefined
+        });
+        return jsonObj;
+    }
+    CreateTagDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateTagDetails = exports.CreateTagDetails || (exports.CreateTagDetails = {}));
 //# sourceMappingURL=create-tag-details.js.map
 
@@ -29009,6 +33061,11 @@ var CreateTagNamespaceDetails;
         return jsonObj;
     }
     CreateTagNamespaceDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateTagNamespaceDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateTagNamespaceDetails = exports.CreateTagNamespaceDetails || (exports.CreateTagNamespaceDetails = {}));
 //# sourceMappingURL=create-tag-namespace-details.js.map
 
@@ -29040,6 +33097,11 @@ var CreateUserDetails;
         return jsonObj;
     }
     CreateUserDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CreateUserDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CreateUserDetails = exports.CreateUserDetails || (exports.CreateUserDetails = {}));
 //# sourceMappingURL=create-user-details.js.map
 
@@ -29084,6 +33146,11 @@ var CustomerSecretKeySummary;
         return jsonObj;
     }
     CustomerSecretKeySummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CustomerSecretKeySummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CustomerSecretKeySummary = exports.CustomerSecretKeySummary || (exports.CustomerSecretKeySummary = {}));
 //# sourceMappingURL=customer-secret-key-summary.js.map
 
@@ -29128,6 +33195,11 @@ var CustomerSecretKey;
         return jsonObj;
     }
     CustomerSecretKey.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    CustomerSecretKey.getDeserializedJsonObj = getDeserializedJsonObj;
 })(CustomerSecretKey = exports.CustomerSecretKey || (exports.CustomerSecretKey = {}));
 //# sourceMappingURL=customer-secret-key.js.map
 
@@ -29182,12 +33254,19 @@ var DefaultTagDefinitionValidator;
     }
     DefaultTagDefinitionValidator.getJsonObj = getJsonObj;
     DefaultTagDefinitionValidator.validatorType = "DEFAULT";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.BaseTagDefinitionValidator.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    DefaultTagDefinitionValidator.getDeserializedJsonObj = getDeserializedJsonObj;
 })(DefaultTagDefinitionValidator = exports.DefaultTagDefinitionValidator || (exports.DefaultTagDefinitionValidator = {}));
 //# sourceMappingURL=default-tag-definition-validator.js.map
 
 /***/ }),
 
-/***/ 7620:
+/***/ 8888:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -29226,6 +33305,11 @@ var DynamicGroup;
         return jsonObj;
     }
     DynamicGroup.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    DynamicGroup.getDeserializedJsonObj = getDeserializedJsonObj;
 })(DynamicGroup = exports.DynamicGroup || (exports.DynamicGroup = {}));
 //# sourceMappingURL=dynamic-group.js.map
 
@@ -29280,6 +33364,13 @@ var EnumTagDefinitionValidator;
     }
     EnumTagDefinitionValidator.getJsonObj = getJsonObj;
     EnumTagDefinitionValidator.validatorType = "ENUM";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.BaseTagDefinitionValidator.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    EnumTagDefinitionValidator.getDeserializedJsonObj = getDeserializedJsonObj;
 })(EnumTagDefinitionValidator = exports.EnumTagDefinitionValidator || (exports.EnumTagDefinitionValidator = {}));
 //# sourceMappingURL=enum-tag-definition-validator.js.map
 
@@ -29311,6 +33402,11 @@ var FaultDomain;
         return jsonObj;
     }
     FaultDomain.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    FaultDomain.getDeserializedJsonObj = getDeserializedJsonObj;
 })(FaultDomain = exports.FaultDomain || (exports.FaultDomain = {}));
 //# sourceMappingURL=fault-domain.js.map
 
@@ -29342,6 +33438,11 @@ var FullyQualifiedScope;
         return jsonObj;
     }
     FullyQualifiedScope.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    FullyQualifiedScope.getDeserializedJsonObj = getDeserializedJsonObj;
 })(FullyQualifiedScope = exports.FullyQualifiedScope || (exports.FullyQualifiedScope = {}));
 //# sourceMappingURL=fully-qualified-scope.js.map
 
@@ -29386,6 +33487,11 @@ var Group;
         return jsonObj;
     }
     Group.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    Group.getDeserializedJsonObj = getDeserializedJsonObj;
 })(Group = exports.Group || (exports.Group = {}));
 //# sourceMappingURL=group.js.map
 
@@ -29417,6 +33523,11 @@ var IdentityProviderGroupSummary;
         return jsonObj;
     }
     IdentityProviderGroupSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    IdentityProviderGroupSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(IdentityProviderGroupSummary = exports.IdentityProviderGroupSummary || (exports.IdentityProviderGroupSummary = {}));
 //# sourceMappingURL=identity-provider-group-summary.js.map
 
@@ -29489,6 +33600,19 @@ var IdentityProvider;
         return jsonObj;
     }
     IdentityProvider.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("protocol" in obj && obj.protocol) {
+            switch (obj.protocol) {
+                case "SAML2":
+                    return model.Saml2IdentityProvider.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.protocol);
+            }
+        }
+        return jsonObj;
+    }
+    IdentityProvider.getDeserializedJsonObj = getDeserializedJsonObj;
 })(IdentityProvider = exports.IdentityProvider || (exports.IdentityProvider = {}));
 //# sourceMappingURL=identity-provider.js.map
 
@@ -29533,6 +33657,11 @@ var IdpGroupMapping;
         return jsonObj;
     }
     IdpGroupMapping.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    IdpGroupMapping.getDeserializedJsonObj = getDeserializedJsonObj;
 })(IdpGroupMapping = exports.IdpGroupMapping || (exports.IdpGroupMapping = {}));
 //# sourceMappingURL=idp-group-mapping.js.map
 
@@ -29610,7 +33739,7 @@ const BulkEditTagsResourceType = __importStar(__nccwpck_require__(5566));
 exports.BulkEditTagsResourceType = BulkEditTagsResourceType.BulkEditTagsResourceType;
 const BulkEditTagsResourceTypeCollection = __importStar(__nccwpck_require__(3808));
 exports.BulkEditTagsResourceTypeCollection = BulkEditTagsResourceTypeCollection.BulkEditTagsResourceTypeCollection;
-const BulkMoveResourcesDetails = __importStar(__nccwpck_require__(746));
+const BulkMoveResourcesDetails = __importStar(__nccwpck_require__(9739));
 exports.BulkMoveResourcesDetails = BulkMoveResourcesDetails.BulkMoveResourcesDetails;
 const ChangeTagNamespaceCompartmentDetail = __importStar(__nccwpck_require__(5779));
 exports.ChangeTagNamespaceCompartmentDetail = ChangeTagNamespaceCompartmentDetail.ChangeTagNamespaceCompartmentDetail;
@@ -29656,7 +33785,7 @@ const CustomerSecretKey = __importStar(__nccwpck_require__(8681));
 exports.CustomerSecretKey = CustomerSecretKey.CustomerSecretKey;
 const CustomerSecretKeySummary = __importStar(__nccwpck_require__(6361));
 exports.CustomerSecretKeySummary = CustomerSecretKeySummary.CustomerSecretKeySummary;
-const DynamicGroup = __importStar(__nccwpck_require__(7620));
+const DynamicGroup = __importStar(__nccwpck_require__(8888));
 exports.DynamicGroup = DynamicGroup.DynamicGroup;
 const FaultDomain = __importStar(__nccwpck_require__(8374));
 exports.FaultDomain = FaultDomain.FaultDomain;
@@ -29839,6 +33968,11 @@ var MfaTotpDeviceSummary;
         return jsonObj;
     }
     MfaTotpDeviceSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    MfaTotpDeviceSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(MfaTotpDeviceSummary = exports.MfaTotpDeviceSummary || (exports.MfaTotpDeviceSummary = {}));
 //# sourceMappingURL=mfa-totp-device-summary.js.map
 
@@ -29883,6 +34017,11 @@ var MfaTotpDevice;
         return jsonObj;
     }
     MfaTotpDevice.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    MfaTotpDevice.getDeserializedJsonObj = getDeserializedJsonObj;
 })(MfaTotpDevice = exports.MfaTotpDevice || (exports.MfaTotpDevice = {}));
 //# sourceMappingURL=mfa-totp-device.js.map
 
@@ -29914,6 +34053,11 @@ var MfaTotpToken;
         return jsonObj;
     }
     MfaTotpToken.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    MfaTotpToken.getDeserializedJsonObj = getDeserializedJsonObj;
 })(MfaTotpToken = exports.MfaTotpToken || (exports.MfaTotpToken = {}));
 //# sourceMappingURL=mfa-totp-token.js.map
 
@@ -29945,6 +34089,11 @@ var MoveCompartmentDetails;
         return jsonObj;
     }
     MoveCompartmentDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    MoveCompartmentDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(MoveCompartmentDetails = exports.MoveCompartmentDetails || (exports.MoveCompartmentDetails = {}));
 //# sourceMappingURL=move-compartment-details.js.map
 
@@ -29976,6 +34125,11 @@ var NetworkPolicy;
         return jsonObj;
     }
     NetworkPolicy.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    NetworkPolicy.getDeserializedJsonObj = getDeserializedJsonObj;
 })(NetworkPolicy = exports.NetworkPolicy || (exports.NetworkPolicy = {}));
 //# sourceMappingURL=network-policy.js.map
 
@@ -30033,6 +34187,17 @@ var NetworkSourcesSummary;
         return jsonObj;
     }
     NetworkSourcesSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "virtualSourceList": obj.virtualSourceList
+                ? obj.virtualSourceList.map(item => {
+                    return model.NetworkSourcesVirtualSourceList.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    NetworkSourcesSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(NetworkSourcesSummary = exports.NetworkSourcesSummary || (exports.NetworkSourcesSummary = {}));
 //# sourceMappingURL=network-sources-summary.js.map
 
@@ -30103,6 +34268,17 @@ var NetworkSources;
         return jsonObj;
     }
     NetworkSources.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "virtualSourceList": obj.virtualSourceList
+                ? obj.virtualSourceList.map(item => {
+                    return model.NetworkSourcesVirtualSourceList.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    NetworkSources.getDeserializedJsonObj = getDeserializedJsonObj;
 })(NetworkSources = exports.NetworkSources || (exports.NetworkSources = {}));
 //# sourceMappingURL=network-sources.js.map
 
@@ -30134,6 +34310,11 @@ var NetworkSourcesVirtualSourceList;
         return jsonObj;
     }
     NetworkSourcesVirtualSourceList.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    NetworkSourcesVirtualSourceList.getDeserializedJsonObj = getDeserializedJsonObj;
 })(NetworkSourcesVirtualSourceList = exports.NetworkSourcesVirtualSourceList || (exports.NetworkSourcesVirtualSourceList = {}));
 //# sourceMappingURL=network-sources_virtual-source-list.js.map
 
@@ -30204,6 +34385,17 @@ var OAuth2ClientCredentialSummary;
         return jsonObj;
     }
     OAuth2ClientCredentialSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "scopes": obj.scopes
+                ? obj.scopes.map(item => {
+                    return model.FullyQualifiedScope.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    OAuth2ClientCredentialSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(OAuth2ClientCredentialSummary = exports.OAuth2ClientCredentialSummary || (exports.OAuth2ClientCredentialSummary = {}));
 //# sourceMappingURL=o-auth2-client-credential-summary.js.map
 
@@ -30274,6 +34466,17 @@ var OAuth2ClientCredential;
         return jsonObj;
     }
     OAuth2ClientCredential.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "scopes": obj.scopes
+                ? obj.scopes.map(item => {
+                    return model.FullyQualifiedScope.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    OAuth2ClientCredential.getDeserializedJsonObj = getDeserializedJsonObj;
 })(OAuth2ClientCredential = exports.OAuth2ClientCredential || (exports.OAuth2ClientCredential = {}));
 //# sourceMappingURL=o-auth2-client-credential.js.map
 
@@ -30305,6 +34508,11 @@ var PasswordPolicy;
         return jsonObj;
     }
     PasswordPolicy.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    PasswordPolicy.getDeserializedJsonObj = getDeserializedJsonObj;
 })(PasswordPolicy = exports.PasswordPolicy || (exports.PasswordPolicy = {}));
 //# sourceMappingURL=password-policy.js.map
 
@@ -30349,6 +34557,11 @@ var Policy;
         return jsonObj;
     }
     Policy.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    Policy.getDeserializedJsonObj = getDeserializedJsonObj;
 })(Policy = exports.Policy || (exports.Policy = {}));
 //# sourceMappingURL=policy.js.map
 
@@ -30390,6 +34603,11 @@ var RegionSubscription;
         return jsonObj;
     }
     RegionSubscription.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    RegionSubscription.getDeserializedJsonObj = getDeserializedJsonObj;
 })(RegionSubscription = exports.RegionSubscription || (exports.RegionSubscription = {}));
 //# sourceMappingURL=region-subscription.js.map
 
@@ -30421,6 +34639,11 @@ var Region;
         return jsonObj;
     }
     Region.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    Region.getDeserializedJsonObj = getDeserializedJsonObj;
 })(Region = exports.Region || (exports.Region = {}));
 //# sourceMappingURL=region.js.map
 
@@ -30475,6 +34698,13 @@ var Saml2IdentityProvider;
     }
     Saml2IdentityProvider.getJsonObj = getJsonObj;
     Saml2IdentityProvider.protocol = "SAML2";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.IdentityProvider.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    Saml2IdentityProvider.getDeserializedJsonObj = getDeserializedJsonObj;
 })(Saml2IdentityProvider = exports.Saml2IdentityProvider || (exports.Saml2IdentityProvider = {}));
 //# sourceMappingURL=saml2-identity-provider.js.map
 
@@ -30506,6 +34736,11 @@ var ScimClientCredentials;
         return jsonObj;
     }
     ScimClientCredentials.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    ScimClientCredentials.getDeserializedJsonObj = getDeserializedJsonObj;
 })(ScimClientCredentials = exports.ScimClientCredentials || (exports.ScimClientCredentials = {}));
 //# sourceMappingURL=scim-client-credentials.js.map
 
@@ -30550,6 +34785,11 @@ var SmtpCredentialSummary;
         return jsonObj;
     }
     SmtpCredentialSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    SmtpCredentialSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(SmtpCredentialSummary = exports.SmtpCredentialSummary || (exports.SmtpCredentialSummary = {}));
 //# sourceMappingURL=smtp-credential-summary.js.map
 
@@ -30594,6 +34834,11 @@ var SmtpCredential;
         return jsonObj;
     }
     SmtpCredential.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    SmtpCredential.getDeserializedJsonObj = getDeserializedJsonObj;
 })(SmtpCredential = exports.SmtpCredential || (exports.SmtpCredential = {}));
 //# sourceMappingURL=smtp-credential.js.map
 
@@ -30638,6 +34883,11 @@ var SwiftPassword;
         return jsonObj;
     }
     SwiftPassword.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    SwiftPassword.getDeserializedJsonObj = getDeserializedJsonObj;
 })(SwiftPassword = exports.SwiftPassword || (exports.SwiftPassword = {}));
 //# sourceMappingURL=swift-password.js.map
 
@@ -30678,6 +34928,11 @@ var TagDefaultSummary;
         return jsonObj;
     }
     TagDefaultSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    TagDefaultSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TagDefaultSummary = exports.TagDefaultSummary || (exports.TagDefaultSummary = {}));
 //# sourceMappingURL=tag-default-summary.js.map
 
@@ -30718,6 +34973,11 @@ var TagDefault;
         return jsonObj;
     }
     TagDefault.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    TagDefault.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TagDefault = exports.TagDefault || (exports.TagDefault = {}));
 //# sourceMappingURL=tag-default.js.map
 
@@ -30749,6 +35009,11 @@ var TagNamespaceSummary;
         return jsonObj;
     }
     TagNamespaceSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    TagNamespaceSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TagNamespaceSummary = exports.TagNamespaceSummary || (exports.TagNamespaceSummary = {}));
 //# sourceMappingURL=tag-namespace-summary.js.map
 
@@ -30792,6 +35057,11 @@ var TagNamespace;
         return jsonObj;
     }
     TagNamespace.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    TagNamespace.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TagNamespace = exports.TagNamespace || (exports.TagNamespace = {}));
 //# sourceMappingURL=tag-namespace.js.map
 
@@ -30823,6 +35093,11 @@ var TagSummary;
         return jsonObj;
     }
     TagSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    TagSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TagSummary = exports.TagSummary || (exports.TagSummary = {}));
 //# sourceMappingURL=tag-summary.js.map
 
@@ -30890,6 +35165,15 @@ var Tag;
         return jsonObj;
     }
     Tag.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "validator": obj.validator
+                ? model.BaseTagDefinitionValidator.getDeserializedJsonObj(obj.validator)
+                : undefined
+        });
+        return jsonObj;
+    }
+    Tag.getDeserializedJsonObj = getDeserializedJsonObj;
 })(Tag = exports.Tag || (exports.Tag = {}));
 //# sourceMappingURL=tag.js.map
 
@@ -30921,6 +35205,11 @@ var TaggingWorkRequestErrorSummary;
         return jsonObj;
     }
     TaggingWorkRequestErrorSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    TaggingWorkRequestErrorSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TaggingWorkRequestErrorSummary = exports.TaggingWorkRequestErrorSummary || (exports.TaggingWorkRequestErrorSummary = {}));
 //# sourceMappingURL=tagging-work-request-error-summary.js.map
 
@@ -30952,6 +35241,11 @@ var TaggingWorkRequestLogSummary;
         return jsonObj;
     }
     TaggingWorkRequestLogSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    TaggingWorkRequestLogSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TaggingWorkRequestLogSummary = exports.TaggingWorkRequestLogSummary || (exports.TaggingWorkRequestLogSummary = {}));
 //# sourceMappingURL=tagging-work-request-log-summary.js.map
 
@@ -31036,6 +35330,17 @@ var TaggingWorkRequestSummary;
         return jsonObj;
     }
     TaggingWorkRequestSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "resources": obj.resources
+                ? obj.resources.map(item => {
+                    return model.WorkRequestResource.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    TaggingWorkRequestSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TaggingWorkRequestSummary = exports.TaggingWorkRequestSummary || (exports.TaggingWorkRequestSummary = {}));
 //# sourceMappingURL=tagging-work-request-summary.js.map
 
@@ -31120,6 +35425,17 @@ var TaggingWorkRequest;
         return jsonObj;
     }
     TaggingWorkRequest.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "resources": obj.resources
+                ? obj.resources.map(item => {
+                    return model.WorkRequestResource.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    TaggingWorkRequest.getDeserializedJsonObj = getDeserializedJsonObj;
 })(TaggingWorkRequest = exports.TaggingWorkRequest || (exports.TaggingWorkRequest = {}));
 //# sourceMappingURL=tagging-work-request.js.map
 
@@ -31151,6 +35467,11 @@ var Tenancy;
         return jsonObj;
     }
     Tenancy.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    Tenancy.getDeserializedJsonObj = getDeserializedJsonObj;
 })(Tenancy = exports.Tenancy || (exports.Tenancy = {}));
 //# sourceMappingURL=tenancy.js.map
 
@@ -31195,6 +35516,11 @@ var UIPasswordInformation;
         return jsonObj;
     }
     UIPasswordInformation.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UIPasswordInformation.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UIPasswordInformation = exports.UIPasswordInformation || (exports.UIPasswordInformation = {}));
 //# sourceMappingURL=u-ipassword-information.js.map
 
@@ -31239,6 +35565,11 @@ var UIPassword;
         return jsonObj;
     }
     UIPassword.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UIPassword.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UIPassword = exports.UIPassword || (exports.UIPassword = {}));
 //# sourceMappingURL=u-ipassword.js.map
 
@@ -31270,6 +35601,11 @@ var UpdateAuthTokenDetails;
         return jsonObj;
     }
     UpdateAuthTokenDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateAuthTokenDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateAuthTokenDetails = exports.UpdateAuthTokenDetails || (exports.UpdateAuthTokenDetails = {}));
 //# sourceMappingURL=update-auth-token-details.js.map
 
@@ -31328,6 +35664,18 @@ var UpdateAuthenticationPolicyDetails;
         return jsonObj;
     }
     UpdateAuthenticationPolicyDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "passwordPolicy": obj.passwordPolicy
+                ? model.PasswordPolicy.getDeserializedJsonObj(obj.passwordPolicy)
+                : undefined,
+            "networkPolicy": obj.networkPolicy
+                ? model.NetworkPolicy.getDeserializedJsonObj(obj.networkPolicy)
+                : undefined
+        });
+        return jsonObj;
+    }
+    UpdateAuthenticationPolicyDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateAuthenticationPolicyDetails = exports.UpdateAuthenticationPolicyDetails || (exports.UpdateAuthenticationPolicyDetails = {}));
 //# sourceMappingURL=update-authentication-policy-details.js.map
 
@@ -31359,6 +35707,11 @@ var UpdateCompartmentDetails;
         return jsonObj;
     }
     UpdateCompartmentDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateCompartmentDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateCompartmentDetails = exports.UpdateCompartmentDetails || (exports.UpdateCompartmentDetails = {}));
 //# sourceMappingURL=update-compartment-details.js.map
 
@@ -31390,6 +35743,11 @@ var UpdateCustomerSecretKeyDetails;
         return jsonObj;
     }
     UpdateCustomerSecretKeyDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateCustomerSecretKeyDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateCustomerSecretKeyDetails = exports.UpdateCustomerSecretKeyDetails || (exports.UpdateCustomerSecretKeyDetails = {}));
 //# sourceMappingURL=update-customer-secret-key-details.js.map
 
@@ -31421,6 +35779,11 @@ var UpdateDynamicGroupDetails;
         return jsonObj;
     }
     UpdateDynamicGroupDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateDynamicGroupDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateDynamicGroupDetails = exports.UpdateDynamicGroupDetails || (exports.UpdateDynamicGroupDetails = {}));
 //# sourceMappingURL=update-dynamic-group-details.js.map
 
@@ -31452,6 +35815,11 @@ var UpdateGroupDetails;
         return jsonObj;
     }
     UpdateGroupDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateGroupDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateGroupDetails = exports.UpdateGroupDetails || (exports.UpdateGroupDetails = {}));
 //# sourceMappingURL=update-group-details.js.map
 
@@ -31511,6 +35879,19 @@ var UpdateIdentityProviderDetails;
         return jsonObj;
     }
     UpdateIdentityProviderDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        if ("protocol" in obj && obj.protocol) {
+            switch (obj.protocol) {
+                case "SAML2":
+                    return model.UpdateSaml2IdentityProviderDetails.getDeserializedJsonObj(jsonObj, true);
+                default:
+                    throw Error("Unknown value for: " + obj.protocol);
+            }
+        }
+        return jsonObj;
+    }
+    UpdateIdentityProviderDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateIdentityProviderDetails = exports.UpdateIdentityProviderDetails || (exports.UpdateIdentityProviderDetails = {}));
 //# sourceMappingURL=update-identity-provider-details.js.map
 
@@ -31542,6 +35923,11 @@ var UpdateIdpGroupMappingDetails;
         return jsonObj;
     }
     UpdateIdpGroupMappingDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateIdpGroupMappingDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateIdpGroupMappingDetails = exports.UpdateIdpGroupMappingDetails || (exports.UpdateIdpGroupMappingDetails = {}));
 //# sourceMappingURL=update-idp-group-mapping-details.js.map
 
@@ -31599,6 +35985,17 @@ var UpdateNetworkSourceDetails;
         return jsonObj;
     }
     UpdateNetworkSourceDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "virtualSourceList": obj.virtualSourceList
+                ? obj.virtualSourceList.map(item => {
+                    return model.NetworkSourcesVirtualSourceList.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    UpdateNetworkSourceDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateNetworkSourceDetails = exports.UpdateNetworkSourceDetails || (exports.UpdateNetworkSourceDetails = {}));
 //# sourceMappingURL=update-network-source-details.js.map
 
@@ -31656,6 +36053,17 @@ var UpdateOAuth2ClientCredentialDetails;
         return jsonObj;
     }
     UpdateOAuth2ClientCredentialDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "scopes": obj.scopes
+                ? obj.scopes.map(item => {
+                    return model.FullyQualifiedScope.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    UpdateOAuth2ClientCredentialDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateOAuth2ClientCredentialDetails = exports.UpdateOAuth2ClientCredentialDetails || (exports.UpdateOAuth2ClientCredentialDetails = {}));
 //# sourceMappingURL=update-oauth2-client-credential-details.js.map
 
@@ -31687,6 +36095,11 @@ var UpdatePolicyDetails;
         return jsonObj;
     }
     UpdatePolicyDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdatePolicyDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdatePolicyDetails = exports.UpdatePolicyDetails || (exports.UpdatePolicyDetails = {}));
 //# sourceMappingURL=update-policy-details.js.map
 
@@ -31741,6 +36154,13 @@ var UpdateSaml2IdentityProviderDetails;
     }
     UpdateSaml2IdentityProviderDetails.getJsonObj = getJsonObj;
     UpdateSaml2IdentityProviderDetails.protocol = "SAML2";
+    function getDeserializedJsonObj(obj, isParentJsonObj) {
+        const jsonObj = Object.assign(Object.assign({}, (isParentJsonObj
+            ? obj
+            : model.UpdateIdentityProviderDetails.getDeserializedJsonObj(obj))), {});
+        return jsonObj;
+    }
+    UpdateSaml2IdentityProviderDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateSaml2IdentityProviderDetails = exports.UpdateSaml2IdentityProviderDetails || (exports.UpdateSaml2IdentityProviderDetails = {}));
 //# sourceMappingURL=update-saml2-identity-provider-details.js.map
 
@@ -31772,6 +36192,11 @@ var UpdateSmtpCredentialDetails;
         return jsonObj;
     }
     UpdateSmtpCredentialDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateSmtpCredentialDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateSmtpCredentialDetails = exports.UpdateSmtpCredentialDetails || (exports.UpdateSmtpCredentialDetails = {}));
 //# sourceMappingURL=update-smtp-credential-details.js.map
 
@@ -31803,6 +36228,11 @@ var UpdateStateDetails;
         return jsonObj;
     }
     UpdateStateDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateStateDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateStateDetails = exports.UpdateStateDetails || (exports.UpdateStateDetails = {}));
 //# sourceMappingURL=update-state-details.js.map
 
@@ -31834,6 +36264,11 @@ var UpdateSwiftPasswordDetails;
         return jsonObj;
     }
     UpdateSwiftPasswordDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateSwiftPasswordDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateSwiftPasswordDetails = exports.UpdateSwiftPasswordDetails || (exports.UpdateSwiftPasswordDetails = {}));
 //# sourceMappingURL=update-swift-password-details.js.map
 
@@ -31865,6 +36300,11 @@ var UpdateTagDefaultDetails;
         return jsonObj;
     }
     UpdateTagDefaultDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateTagDefaultDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateTagDefaultDetails = exports.UpdateTagDefaultDetails || (exports.UpdateTagDefaultDetails = {}));
 //# sourceMappingURL=update-tag-default-details.js.map
 
@@ -31920,6 +36360,15 @@ var UpdateTagDetails;
         return jsonObj;
     }
     UpdateTagDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "validator": obj.validator
+                ? model.BaseTagDefinitionValidator.getDeserializedJsonObj(obj.validator)
+                : undefined
+        });
+        return jsonObj;
+    }
+    UpdateTagDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateTagDetails = exports.UpdateTagDetails || (exports.UpdateTagDetails = {}));
 //# sourceMappingURL=update-tag-details.js.map
 
@@ -31951,6 +36400,11 @@ var UpdateTagNamespaceDetails;
         return jsonObj;
     }
     UpdateTagNamespaceDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateTagNamespaceDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateTagNamespaceDetails = exports.UpdateTagNamespaceDetails || (exports.UpdateTagNamespaceDetails = {}));
 //# sourceMappingURL=update-tag-namespace-details.js.map
 
@@ -31982,6 +36436,11 @@ var UpdateUserCapabilitiesDetails;
         return jsonObj;
     }
     UpdateUserCapabilitiesDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateUserCapabilitiesDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateUserCapabilitiesDetails = exports.UpdateUserCapabilitiesDetails || (exports.UpdateUserCapabilitiesDetails = {}));
 //# sourceMappingURL=update-user-capabilities-details.js.map
 
@@ -32013,6 +36472,11 @@ var UpdateUserDetails;
         return jsonObj;
     }
     UpdateUserDetails.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UpdateUserDetails.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UpdateUserDetails = exports.UpdateUserDetails || (exports.UpdateUserDetails = {}));
 //# sourceMappingURL=update-user-details.js.map
 
@@ -32044,6 +36508,11 @@ var UserCapabilities;
         return jsonObj;
     }
     UserCapabilities.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UserCapabilities.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UserCapabilities = exports.UserCapabilities || (exports.UserCapabilities = {}));
 //# sourceMappingURL=user-capabilities.js.map
 
@@ -32088,6 +36557,11 @@ var UserGroupMembership;
         return jsonObj;
     }
     UserGroupMembership.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    UserGroupMembership.getDeserializedJsonObj = getDeserializedJsonObj;
 })(UserGroupMembership = exports.UserGroupMembership || (exports.UserGroupMembership = {}));
 //# sourceMappingURL=user-group-membership.js.map
 
@@ -32156,6 +36630,15 @@ var User;
         return jsonObj;
     }
     User.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "capabilities": obj.capabilities
+                ? model.UserCapabilities.getDeserializedJsonObj(obj.capabilities)
+                : undefined
+        });
+        return jsonObj;
+    }
+    User.getDeserializedJsonObj = getDeserializedJsonObj;
 })(User = exports.User || (exports.User = {}));
 //# sourceMappingURL=user.js.map
 
@@ -32187,6 +36670,11 @@ var WorkRequestError;
         return jsonObj;
     }
     WorkRequestError.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    WorkRequestError.getDeserializedJsonObj = getDeserializedJsonObj;
 })(WorkRequestError = exports.WorkRequestError || (exports.WorkRequestError = {}));
 //# sourceMappingURL=work-request-error.js.map
 
@@ -32218,6 +36706,11 @@ var WorkRequestLogEntry;
         return jsonObj;
     }
     WorkRequestLogEntry.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    WorkRequestLogEntry.getDeserializedJsonObj = getDeserializedJsonObj;
 })(WorkRequestLogEntry = exports.WorkRequestLogEntry || (exports.WorkRequestLogEntry = {}));
 //# sourceMappingURL=work-request-log-entry.js.map
 
@@ -32263,6 +36756,11 @@ var WorkRequestResource;
         return jsonObj;
     }
     WorkRequestResource.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {});
+        return jsonObj;
+    }
+    WorkRequestResource.getDeserializedJsonObj = getDeserializedJsonObj;
 })(WorkRequestResource = exports.WorkRequestResource || (exports.WorkRequestResource = {}));
 //# sourceMappingURL=work-request-resource.js.map
 
@@ -32349,6 +36847,22 @@ var WorkRequestSummary;
         return jsonObj;
     }
     WorkRequestSummary.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "resources": obj.resources
+                ? obj.resources.map(item => {
+                    return model.WorkRequestResource.getDeserializedJsonObj(item);
+                })
+                : undefined,
+            "errors": obj.errors
+                ? obj.errors.map(item => {
+                    return model.WorkRequestError.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    WorkRequestSummary.getDeserializedJsonObj = getDeserializedJsonObj;
 })(WorkRequestSummary = exports.WorkRequestSummary || (exports.WorkRequestSummary = {}));
 //# sourceMappingURL=work-request-summary.js.map
 
@@ -32440,6 +36954,27 @@ var WorkRequest;
         return jsonObj;
     }
     WorkRequest.getJsonObj = getJsonObj;
+    function getDeserializedJsonObj(obj) {
+        const jsonObj = Object.assign(Object.assign({}, obj), {
+            "resources": obj.resources
+                ? obj.resources.map(item => {
+                    return model.WorkRequestResource.getDeserializedJsonObj(item);
+                })
+                : undefined,
+            "errors": obj.errors
+                ? obj.errors.map(item => {
+                    return model.WorkRequestError.getDeserializedJsonObj(item);
+                })
+                : undefined,
+            "logs": obj.logs
+                ? obj.logs.map(item => {
+                    return model.WorkRequestLogEntry.getDeserializedJsonObj(item);
+                })
+                : undefined
+        });
+        return jsonObj;
+    }
+    WorkRequest.getDeserializedJsonObj = getDeserializedJsonObj;
 })(WorkRequest = exports.WorkRequest || (exports.WorkRequest = {}));
 //# sourceMappingURL=work-request.js.map
 
@@ -42406,6 +46941,286 @@ function opensshCipherInfo(cipher) {
 
 /***/ }),
 
+/***/ 4294:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(4219);
+
+
+/***/ }),
+
+/***/ 4219:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var net = __nccwpck_require__(1631);
+var tls = __nccwpck_require__(4016);
+var http = __nccwpck_require__(8605);
+var https = __nccwpck_require__(7211);
+var events = __nccwpck_require__(8614);
+var assert = __nccwpck_require__(2357);
+var util = __nccwpck_require__(1669);
+
+
+exports.httpOverHttp = httpOverHttp;
+exports.httpsOverHttp = httpsOverHttp;
+exports.httpOverHttps = httpOverHttps;
+exports.httpsOverHttps = httpsOverHttps;
+
+
+function httpOverHttp(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = http.request;
+  return agent;
+}
+
+function httpsOverHttp(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = http.request;
+  agent.createSocket = createSecureSocket;
+  agent.defaultPort = 443;
+  return agent;
+}
+
+function httpOverHttps(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = https.request;
+  return agent;
+}
+
+function httpsOverHttps(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = https.request;
+  agent.createSocket = createSecureSocket;
+  agent.defaultPort = 443;
+  return agent;
+}
+
+
+function TunnelingAgent(options) {
+  var self = this;
+  self.options = options || {};
+  self.proxyOptions = self.options.proxy || {};
+  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
+  self.requests = [];
+  self.sockets = [];
+
+  self.on('free', function onFree(socket, host, port, localAddress) {
+    var options = toOptions(host, port, localAddress);
+    for (var i = 0, len = self.requests.length; i < len; ++i) {
+      var pending = self.requests[i];
+      if (pending.host === options.host && pending.port === options.port) {
+        // Detect the request to connect same origin server,
+        // reuse the connection.
+        self.requests.splice(i, 1);
+        pending.request.onSocket(socket);
+        return;
+      }
+    }
+    socket.destroy();
+    self.removeSocket(socket);
+  });
+}
+util.inherits(TunnelingAgent, events.EventEmitter);
+
+TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
+  var self = this;
+  var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
+
+  if (self.sockets.length >= this.maxSockets) {
+    // We are over limit so we'll add it to the queue.
+    self.requests.push(options);
+    return;
+  }
+
+  // If we are under maxSockets create a new one.
+  self.createSocket(options, function(socket) {
+    socket.on('free', onFree);
+    socket.on('close', onCloseOrRemove);
+    socket.on('agentRemove', onCloseOrRemove);
+    req.onSocket(socket);
+
+    function onFree() {
+      self.emit('free', socket, options);
+    }
+
+    function onCloseOrRemove(err) {
+      self.removeSocket(socket);
+      socket.removeListener('free', onFree);
+      socket.removeListener('close', onCloseOrRemove);
+      socket.removeListener('agentRemove', onCloseOrRemove);
+    }
+  });
+};
+
+TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
+  var self = this;
+  var placeholder = {};
+  self.sockets.push(placeholder);
+
+  var connectOptions = mergeOptions({}, self.proxyOptions, {
+    method: 'CONNECT',
+    path: options.host + ':' + options.port,
+    agent: false,
+    headers: {
+      host: options.host + ':' + options.port
+    }
+  });
+  if (options.localAddress) {
+    connectOptions.localAddress = options.localAddress;
+  }
+  if (connectOptions.proxyAuth) {
+    connectOptions.headers = connectOptions.headers || {};
+    connectOptions.headers['Proxy-Authorization'] = 'Basic ' +
+        new Buffer(connectOptions.proxyAuth).toString('base64');
+  }
+
+  debug('making CONNECT request');
+  var connectReq = self.request(connectOptions);
+  connectReq.useChunkedEncodingByDefault = false; // for v0.6
+  connectReq.once('response', onResponse); // for v0.6
+  connectReq.once('upgrade', onUpgrade);   // for v0.6
+  connectReq.once('connect', onConnect);   // for v0.7 or later
+  connectReq.once('error', onError);
+  connectReq.end();
+
+  function onResponse(res) {
+    // Very hacky. This is necessary to avoid http-parser leaks.
+    res.upgrade = true;
+  }
+
+  function onUpgrade(res, socket, head) {
+    // Hacky.
+    process.nextTick(function() {
+      onConnect(res, socket, head);
+    });
+  }
+
+  function onConnect(res, socket, head) {
+    connectReq.removeAllListeners();
+    socket.removeAllListeners();
+
+    if (res.statusCode !== 200) {
+      debug('tunneling socket could not be established, statusCode=%d',
+        res.statusCode);
+      socket.destroy();
+      var error = new Error('tunneling socket could not be established, ' +
+        'statusCode=' + res.statusCode);
+      error.code = 'ECONNRESET';
+      options.request.emit('error', error);
+      self.removeSocket(placeholder);
+      return;
+    }
+    if (head.length > 0) {
+      debug('got illegal response body from proxy');
+      socket.destroy();
+      var error = new Error('got illegal response body from proxy');
+      error.code = 'ECONNRESET';
+      options.request.emit('error', error);
+      self.removeSocket(placeholder);
+      return;
+    }
+    debug('tunneling connection has established');
+    self.sockets[self.sockets.indexOf(placeholder)] = socket;
+    return cb(socket);
+  }
+
+  function onError(cause) {
+    connectReq.removeAllListeners();
+
+    debug('tunneling socket could not be established, cause=%s\n',
+          cause.message, cause.stack);
+    var error = new Error('tunneling socket could not be established, ' +
+                          'cause=' + cause.message);
+    error.code = 'ECONNRESET';
+    options.request.emit('error', error);
+    self.removeSocket(placeholder);
+  }
+};
+
+TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
+  var pos = this.sockets.indexOf(socket)
+  if (pos === -1) {
+    return;
+  }
+  this.sockets.splice(pos, 1);
+
+  var pending = this.requests.shift();
+  if (pending) {
+    // If we have pending requests and a socket gets closed a new one
+    // needs to be created to take over in the pool for the one that closed.
+    this.createSocket(pending, function(socket) {
+      pending.request.onSocket(socket);
+    });
+  }
+};
+
+function createSecureSocket(options, cb) {
+  var self = this;
+  TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
+    var hostHeader = options.request.getHeader('host');
+    var tlsOptions = mergeOptions({}, self.options, {
+      socket: socket,
+      servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
+    });
+
+    // 0 is dummy port for v0.6
+    var secureSocket = tls.connect(0, tlsOptions);
+    self.sockets[self.sockets.indexOf(socket)] = secureSocket;
+    cb(secureSocket);
+  });
+}
+
+
+function toOptions(host, port, localAddress) {
+  if (typeof host === 'string') { // since v0.10
+    return {
+      host: host,
+      port: port,
+      localAddress: localAddress
+    };
+  }
+  return host; // for v0.11 or later
+}
+
+function mergeOptions(target) {
+  for (var i = 1, len = arguments.length; i < len; ++i) {
+    var overrides = arguments[i];
+    if (typeof overrides === 'object') {
+      var keys = Object.keys(overrides);
+      for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
+        var k = keys[j];
+        if (overrides[k] !== undefined) {
+          target[k] = overrides[k];
+        }
+      }
+    }
+  }
+  return target;
+}
+
+
+var debug;
+if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
+  debug = function() {
+    var args = Array.prototype.slice.call(arguments);
+    if (typeof args[0] === 'string') {
+      args[0] = 'TUNNEL: ' + args[0];
+    } else {
+      args.unshift('TUNNEL:');
+    }
+    console.error.apply(console, args);
+  }
+} else {
+  debug = function() {};
+}
+exports.debug = debug; // for test
+
+
+/***/ }),
+
 /***/ 8729:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -45433,7 +50248,7 @@ module.exports = eval("require")("encoding");
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"oci-common","version":"1.19.3","description":"OCI Common module for NodeJS","repository":{"type":"git","url":"https://github.com/oracle/oci-typescript-sdk"},"main":"./index.js","typings":"./index","scripts":{},"author":{"name":"Oracle Cloud Infrastructure","email":""},"license":"(UPL-1.0 OR Apache-2.0)","dependencies":{"@types/isomorphic-fetch":"0.0.35","@types/jsonwebtoken":"^8.5.0","@types/jssha":"^2.0.0","@types/opossum":"4.1.1","@types/sshpk":"^1.10.3","es6-promise":"4.2.6","http-signature":"1.3.1","isomorphic-fetch":"3.0.0","jsonwebtoken":"8.5.1","jssha":"2.4.1","opossum":"5.0.1","sshpk":"1.16.1","uuid":"3.3.3"},"devDependencies":{"@types/chai":"^4.1.7","@types/node":"10.17.0","@types/mocha":"^5.2.5","awesome-typescript-loader":"3.1.3","chai":"^4.2.0","mocha":"^5.2.0","source-map-loader":"0.2.1","ts-node":"^8.0.2","typescript":"4.1.3","webpack":"4.0.0","webpack-cli":"^3.3.0"},"publishConfig":{"registry":"https://registry.npmjs.org"},"contributors":["Jyoti Saini <jyoti.s.saini@oracle.com>","Joe Levy <joe.levy@oracle.com>","Walt Tran <walt.tran@oracle.com>"]}');
+module.exports = JSON.parse('{"name":"oci-common","version":"2.5.0","description":"OCI Common module for NodeJS","repository":{"type":"git","url":"https://github.com/oracle/oci-typescript-sdk"},"main":"./index.js","typings":"./index","scripts":{},"author":{"name":"Oracle Cloud Infrastructure","email":""},"license":"(UPL-1.0 OR Apache-2.0)","dependencies":{"@types/isomorphic-fetch":"0.0.35","@types/jsonwebtoken":"^8.5.0","@types/jssha":"^2.0.0","@types/opossum":"4.1.1","@types/sshpk":"^1.10.3","es6-promise":"4.2.6","http-signature":"1.3.1","isomorphic-fetch":"3.0.0","jsonwebtoken":"8.5.1","jssha":"2.4.1","opossum":"5.0.1","sshpk":"1.16.1","uuid":"3.3.3"},"devDependencies":{"@types/chai":"^4.1.7","@types/node":"14.14.43","@types/mocha":"^5.2.5","awesome-typescript-loader":"3.1.3","chai":"^4.2.0","mocha":"^5.2.0","source-map-loader":"0.2.1","ts-node":"^8.0.2","typescript":"4.1.3","webpack":"4.0.0","webpack-cli":"^3.3.0"},"publishConfig":{"registry":"https://registry.npmjs.org"},"contributors":["Jyoti Saini <jyoti.s.saini@oracle.com>","Joe Levy <joe.levy@oracle.com>","Walt Tran <walt.tran@oracle.com>"]}');
 
 /***/ }),
 
@@ -45441,7 +50256,7 @@ module.exports = JSON.parse('{"name":"oci-common","version":"1.19.3","descriptio
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("assert");;
+module.exports = require("assert");
 
 /***/ }),
 
@@ -45449,7 +50264,7 @@ module.exports = require("assert");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("buffer");;
+module.exports = require("buffer");
 
 /***/ }),
 
@@ -45457,7 +50272,7 @@ module.exports = require("buffer");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("crypto");;
+module.exports = require("crypto");
 
 /***/ }),
 
@@ -45465,7 +50280,7 @@ module.exports = require("crypto");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("events");;
+module.exports = require("events");
 
 /***/ }),
 
@@ -45473,7 +50288,7 @@ module.exports = require("events");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("fs");;
+module.exports = require("fs");
 
 /***/ }),
 
@@ -45481,7 +50296,7 @@ module.exports = require("fs");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("http");;
+module.exports = require("http");
 
 /***/ }),
 
@@ -45489,7 +50304,15 @@ module.exports = require("http");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("https");;
+module.exports = require("https");
+
+/***/ }),
+
+/***/ 1631:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("net");
 
 /***/ }),
 
@@ -45497,7 +50320,7 @@ module.exports = require("https");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("os");;
+module.exports = require("os");
 
 /***/ }),
 
@@ -45505,7 +50328,7 @@ module.exports = require("os");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("path");;
+module.exports = require("path");
 
 /***/ }),
 
@@ -45513,7 +50336,15 @@ module.exports = require("path");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("stream");;
+module.exports = require("stream");
+
+/***/ }),
+
+/***/ 4016:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("tls");
 
 /***/ }),
 
@@ -45521,7 +50352,7 @@ module.exports = require("stream");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("url");;
+module.exports = require("url");
 
 /***/ }),
 
@@ -45529,7 +50360,7 @@ module.exports = require("url");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("util");;
+module.exports = require("util");
 
 /***/ }),
 
@@ -45537,7 +50368,7 @@ module.exports = require("util");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("zlib");;
+module.exports = require("zlib");
 
 /***/ })
 
@@ -45576,7 +50407,9 @@ module.exports = require("zlib");;
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
-/******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";/************************************************************************/
+/******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
+/******/ 	
+/************************************************************************/
 /******/ 	
 /******/ 	// startup
 /******/ 	// Load entry module and return exports

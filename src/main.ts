@@ -21,24 +21,44 @@ interface configJson {
 }
 
 async function login() {
-  const cp = new common.ConfigFileAuthenticationDetailsProvider(
-    process.env.OCI_CLI_CONFIG_FILE
+  // Required environment variables
+  const tenancy = process.env.OCI_CLI_TENANCY || '';
+  const user = process.env.OCI_CLI_USER || '';
+  const fingerprint = process.env.OCI_CLI_FINGERPRINT || '';
+  const privateKey = process.env.OCI_CLI_KEY_CONTENT || '';
+  const region = common.Region.fromRegionId(process.env.OCI_CLI_REGION || '');
+
+  const authProvider = new common.SimpleAuthenticationDetailsProvider(
+    tenancy,
+    user,
+    fingerprint,
+    privateKey,
+    null,
+    region
   );
-  const ac = new artifacts.ArtifactsClient({authenticationDetailsProvider: cp});
-  const ic = new identity.IdentityClient({authenticationDetailsProvider: cp});
+
+  const ac = new artifacts.ArtifactsClient({
+    authenticationDetailsProvider: authProvider
+  });
+  const ic = new identity.IdentityClient({
+    authenticationDetailsProvider: authProvider
+  });
 
   const regionCode = (await ic.listRegions({})).items
-    .find(x => x.name === cp.getRegion().regionId)
+    .find(x => x.name === authProvider.getRegion().regionId)
     ?.key?.toLocaleLowerCase();
 
   if (regionCode) {
     const ocir = `${regionCode}.ocir.io`;
 
     const namespace = (
-      await ac.getContainerConfiguration({compartmentId: cp.getTenantId()})
+      await ac.getContainerConfiguration({
+        compartmentId: authProvider.getTenantId()
+      })
     ).containerConfiguration.namespace;
 
-    const ociUser = (await ic.getUser({userId: cp.getUser()})).user.name;
+    const ociUser = (await ic.getUser({userId: authProvider.getUser()})).user
+      .name;
     const ociToken = core.getInput('auth_token', {required: true});
     const authToken = Buffer.from(
       `${namespace}/${ociUser}:${ociToken}`
