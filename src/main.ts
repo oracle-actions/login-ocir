@@ -10,7 +10,8 @@ import * as core from '@actions/core';
 
 import * as artifacts from 'oci-artifacts';
 import * as identity from 'oci-identity';
-import common = require('oci-common');
+import { Region, SimpleAuthenticationDetailsProvider } from 'oci-common';
+
 
 interface configJson {
   auths?: {
@@ -26,9 +27,9 @@ async function login() {
   const user = process.env.OCI_CLI_USER || '';
   const fingerprint = process.env.OCI_CLI_FINGERPRINT || '';
   const privateKey = process.env.OCI_CLI_KEY_CONTENT || '';
-  const region = common.Region.fromRegionId(process.env.OCI_CLI_REGION || '');
+  const region = Region.fromRegionId(process.env.OCI_CLI_REGION || '');
 
-  const authProvider = new common.SimpleAuthenticationDetailsProvider(
+  const authProvider = new SimpleAuthenticationDetailsProvider(
     tenancy,
     user,
     fingerprint,
