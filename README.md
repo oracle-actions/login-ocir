@@ -1,16 +1,26 @@
 # login-ocir v1.0
 
 GitHub Action that logs into the Oracle Cloud Infrastructure Registry (OCIR)
-endpoint in the Oracle Cloud Infrastructure (OCI) region provided in the
-`configure-oci-credentials` step of the workflow.
+endpoint in the Oracle Cloud Infrastructure (OCI) region and using the credentials
+provided via the required environment variables.
 
 The login credentials are provided to both the Docker and Podman container
 tools, so you may use either of them in the subsequent workflow steps.
 
-## Dependency requirement
+## Required environment variables
 
-This action depends on the use of the [`oracle-actions/configure-oci-credentials@v1.0`][1]
-action in a prior step to configure the required OCI credentials.
+The following [OCI CLI environment variables][1] must be defined for the
+`login-ocir` task to work:
+
+* `OCI_CLI_USER`
+* `OCI_CLI_TENANCY`
+* `OCI_CLI_FINGERPRINT`
+* `OCI_CLI_KEY_CONTENT`
+* `OCI_CLI_REGION`
+
+We recommend using GitHub Secrets to store these values. If you have more than
+one OCI-related task, consider [defining your environment variables][2] at
+the job or workflow level.
 
 ## Inputs
 
@@ -29,17 +39,14 @@ action in a prior step to configure the required OCI credentials.
 jobs:
   my-instances:
     runs-on: ubuntu-latest
-    name: List the display name and shape of the instances in my compartment
+    name: Login to OCIR
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
     steps:
-      - name: Configure OCI Credentials
-        uses: oracle-actions/configure-oci-credentials@v1
-        with:
-          user: ${{ secrets.OCI_USER }}
-          fingerprint: ${{ secrets.OCI_FINGERPRINT }}
-          private_key: ${{ secrets.OCI_PRIVATE_KEY }}
-          tenancy: ${{ secrets.OCI_TENANCY }}
-          region: 'us-ashburn-1'
-
       - name: Login to OCIR
         uses: oracle-actions/login-ocir@v1
         id: login-ocir
@@ -71,7 +78,7 @@ vulnerability disclosure process.
 
 ## License
 
-Copyright (c) 2021 Oracle and/or its affiliates.
+Copyright (c) 2021, 2022 Oracle and/or its affiliates.
 
 Released under the Universal Permissive License v1.0 as shown at
 <https://oss.oracle.com/licenses/upl/>.
