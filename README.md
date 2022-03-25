@@ -83,5 +83,6 @@ Copyright (c) 2021, 2022 Oracle and/or its affiliates.
 Released under the Universal Permissive License v1.0 as shown at
 <https://oss.oracle.com/licenses/upl/>.
 
-[1]: http://github.com/oracle-actions/configure-oci-credentials
+[1]: https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/clienvironmentvariables.htm
+[2]: https://docs.github.com/en/actions/learn-github-actions/environment-variables
 [AUTH]: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingcredentials.htm#Working
