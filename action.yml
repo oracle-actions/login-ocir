@@ -12,6 +12,9 @@ outputs:
     description: The OCIR endpoint to which the user has been authenticated
   ocir_username:
     description: The full username required by OCIR for login purposes
+branding:
+  icon: 'circle'
+  color: 'red'
 runs:
   using: 'node12'
   main: 'dist/index.js'
