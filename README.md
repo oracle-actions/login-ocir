@@ -1,4 +1,4 @@
-# login-ocir v1.0
+# login-ocir
 
 GitHub Action that logs into the Oracle Cloud Infrastructure Registry (OCIR) endpoint in the Oracle Cloud Infrastructure (OCI) region and using the credentials provided via the required environment variables.
 
@@ -43,14 +43,14 @@ jobs:
       OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
     steps:
       - name: Get or create an OCIR Repository
-        uses: oracle-actions/get-ocir-repository@v1.0
+        uses: oracle-actions/get-ocir-repository@v1.1
         id: get-ocir-repository
         with:
           name: oraclelinux
           compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
 
       - name: Log into OCIR
-        uses: oracle-actions/login-ocir@v1.0
+        uses: oracle-actions/login-ocir@v1.1
         id: login-ocir
         with:
           auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
