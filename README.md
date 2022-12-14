@@ -33,7 +33,7 @@ This sample workflow uses the [`login-ocir`][3] action which uses the provided `
 ```yaml
 jobs:
   get-ocir-repository-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Get OCIR Repository Test
     env:
       OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
