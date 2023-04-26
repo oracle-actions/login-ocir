@@ -1,6 +1,6 @@
 {
   "name": "@oracle-actions/login-ocir",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "GitHub Action to login to Oracle Cloud Infrastructure Registry (OCIR)",
   "author": {
     "name": "Oracle Cloud Infrastructure",
