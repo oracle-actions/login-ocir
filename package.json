@@ -13,7 +13,8 @@
     "dist/*"
   ],
   "scripts": {
-    "build": "ncc build src/main.ts"
+    "build": "ncc build src/main.ts",
+    "version": "npm run build && git add -A dist"
   },
   "repository": {
     "type": "git",
